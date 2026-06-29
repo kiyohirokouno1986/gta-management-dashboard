@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { live, snap, makeCtx } from "./data";
 import { buildSummaryRows, buildSummaryKpi } from "./summary";
+import { deriveCandidates, newCandidates } from "./board";
+import { loadIssues } from "./persist";
 import { num, rowVals, rowVals12, salesPlan, salesPlan12 } from "./sheet";
 import { snapUnit, sumUnits } from "./snap";
 import { targetSeries } from "./targets";
@@ -133,6 +135,25 @@ describe("経営サマリー (summary)", () => {
     expect(get("fudosan").srMonth).toBe(0); // 不動産仲介 当月売上0
     expect(get("fudosan").judge).toBe("fail");
     expect(get("chumon").judge).toBe("near"); // 4,734,544 vs 目標 4,830,400
+  });
+});
+
+describe("課題ボード (board)", () => {
+  const c = makeCtx({ live, snap });
+  it("loadIssues は埋め込み課題(9件)を返す（window無し環境）", () => {
+    expect(loadIssues()).toHaveLength(9);
+  });
+  it("AI提案: 数値から課題候補を自動抽出", () => {
+    const cands = deriveCandidates(c);
+    const titles = cands.map((x) => x.title);
+    // 営業利益(管理)累計が赤字 → 通期黒字化
+    expect(titles).toContain("通期黒字化の確度向上");
+    // 不動産仲介(投資)が売上未達 → 投資回収の筋道
+    expect(titles).toContain("不動産仲介 投資回収の筋道(KPI)");
+  });
+  it("newCandidates は既存タイトルを除外する", () => {
+    expect(newCandidates(c, [])).toEqual(deriveCandidates(c));
+    expect(newCandidates(c, loadIssues())).toHaveLength(0); // 埋め込みに同名あり
   });
 });
 

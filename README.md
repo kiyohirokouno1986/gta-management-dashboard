@@ -56,6 +56,8 @@ npm run preview    # ビルド成果物のプレビュー
 | `src/lib/format.ts` | `yen` / `mm`（金額・万円フォーマット） |
 | `src/lib/summary.ts` | 経営サマリーの数値計算（KPI・全ユニット一覧。`targetSeries` 再利用） |
 | `src/views/` | `summary`(経営サマリー) / `unitPanel` / `goalRow` / `matrix` / `plbox`(＋MQ) / `advice` / `progress` / `vision` / `rules` / `chart` |
+| `src/lib/board.ts` / `persist.ts` | 課題ボードのAI提案ロジック ／ 読み書き（Apps Script `saveIssues` or localStorage） |
+| `src/components/IssuesBoard.tsx` | 課題ボード（対話的・ドラッグ/編集/AI提案/保存） |
 | `src/data/` | `live.json` / `snap.json`（埋め込みデータ） |
 | `legacy/` | 正本（Apps Script 版 Code.gs / Page.html） |
 | `docs/` | 引き継ぎ書 |
@@ -146,6 +148,6 @@ npm run preview    # ビルド成果物のプレビュー
 
 - [x] **部門別PLのシート化（ライブ取得）** — Excel手貼り → Google シート編集のみで反映。
 - [x] **経営サマリー（全社一覧ヒートマップ）＋ 前年比(YoY)** — 開いた瞬間に全体が分かるトップ画面。
-- [ ] **課題マトリクス（緊急度×重要度）＋タスク管理** — 課題管理シート連携でプロット＋一覧（モック作成済み）。
+- [x] **課題ボード（緊急×重要・アイゼンハワー型）＋タスク管理** — 4象限＋Done。ドラッグ移動・追加/編集/削除・AI提案（数値から自動抽出）。保存＝課題ボードGoogleシート（Apps Scriptで書き戻し）。Slackキャンバスへは別途書き出し。
 - [ ] **全ユニットに進捗グラフ展開** — 現状は全社のみの月次／累計 SVG を各ユニットへ。
 - [ ] **目標率・最新月の設定UI化** — `TARGETS` の率や `LATEST` を画面から変更し全月再計算。CX 配賦人月の 3.75→3人月固定ルール反映も含む。
