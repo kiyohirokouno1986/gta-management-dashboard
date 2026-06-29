@@ -23,6 +23,19 @@ export type Snap = Record<
 
 export type Mode = "month" | "cum";
 
+/** 課題ボードの象限。 */
+export type Quadrant = "すぐやる" | "計画する" | "任せる" | "なくす" | "完了";
+
+/** 課題カード（課題ボードシート由来）。 */
+export interface Issue {
+  title: string;
+  cat: string;
+  quad: Quadrant;
+  memo: string;
+  owner: string;
+  due: string;
+}
+
 /**
  * Render context — replaces the canonical global state
  * (LIVE / SNAP / LATEST / MODE) with an explicit, testable object.

@@ -16,6 +16,7 @@
 
 var LIVE_SHEET_ID = '15ybH2lLFLpV0DqgeVWawsrArhKcL8jHdC_Yp7eQ5dhI';
 var SNAP_SHEET_ID = '1q9ZHh46foHIipRrDc--3abtD1IRSs75uEuI6gYnRcS8';
+var ISSUES_SHEET_ID = '1_w4OI2gSy-e0CC1ddZL5dboLVgHZQBj1LA6IXwTYdVE';
 
 // 部門別PLシートの「部門」名 → SNAPキー
 var UNIT_MAP = {
@@ -48,11 +49,13 @@ function doGet() {
     var snap = readSnap_();
     var months = snap.__months;
     delete snap.__months;
+    var issues = readIssues_();
     injected =
       '<script>' +
       'window.__LIVE__=' + JSON.stringify(live) + ';' +
       'window.__SNAP__=' + JSON.stringify(snap) + ';' +
       'window.__MONTHS__=' + JSON.stringify(months) + ';' +
+      'window.__ISSUES__=' + JSON.stringify(issues) + ';' +
       '</script>';
   } catch (e) {
     // シート読み込み失敗時は注入しない → SPA は埋め込みデータで表示
@@ -60,7 +63,8 @@ function doGet() {
   }
 
   var page = HtmlService.createHtmlOutputFromFile('Index').getContent();
-  page = page.replace('</head>', injected + '\n</head>');
+  // 関数置換で $&,$1 等の特殊解釈を回避（注入データに $ が含まれても安全）
+  page = page.replace('</head>', function () { return injected + '\n</head>'; });
 
   return HtmlService.createHtmlOutput(page)
     .setTitle('ユニットMTGダッシュボード')
@@ -176,4 +180,60 @@ function monthKey_(raw) {
     return y + '-' + (mo < 10 ? '0' + mo : '' + mo);
   }
   return ('' + raw).trim().replace(/\//g, '-');
+}
+
+function cell_(v) { return v == null ? '' : ('' + v).trim(); }
+
+/** 課題ボードシート（課題/カテゴリ/象限/メモ/担当/期限）を配列に変換。 */
+function readIssues_() {
+  var ss = SpreadsheetApp.openById(ISSUES_SHEET_ID);
+  var sh = ss.getSheets()[0];
+  var v = sh.getDataRange().getValues();
+  if (!v.length) return [];
+  var hr = 0;
+  for (var r = 0; r < v.length; r++) {
+    if (('' + v[r].join('')).indexOf('課題') >= 0) { hr = r; break; }
+  }
+  var H = v[hr], col = {};
+  for (var c = 0; c < H.length; c++) {
+    var h = ('' + H[c]).trim();
+    if (h === '課題') col.title = c;
+    else if (h === 'カテゴリ') col.cat = c;
+    else if (h === '象限') col.quad = c;
+    else if (h === 'メモ') col.memo = c;
+    else if (h === '担当') col.owner = c;
+    else if (h === '期限') col.due = c;
+  }
+  var out = [];
+  for (var r2 = hr + 1; r2 < v.length; r2++) {
+    var row = v[r2];
+    var t = cell_(row[col.title]);
+    if (!t) continue;
+    out.push({
+      title: t,
+      cat: cell_(row[col.cat]),
+      quad: cell_(row[col.quad]) || '計画する',
+      memo: cell_(row[col.memo]),
+      owner: cell_(row[col.owner]) || '-',
+      due: cell_(row[col.due])
+    });
+  }
+  return out;
+}
+
+/**
+ * 課題ボードの保存（クライアントから google.script.run で呼ばれる）。
+ * シートを書き換えて正本を更新する。実行＝デプロイ者なので自分のシートに書ける。
+ */
+function saveIssues(json) {
+  var data = JSON.parse(json);
+  var ss = SpreadsheetApp.openById(ISSUES_SHEET_ID);
+  var sh = ss.getSheets()[0];
+  var rows = [['課題', 'カテゴリ', '象限', 'メモ', '担当', '期限']];
+  data.forEach(function (d) {
+    rows.push([d.title || '', d.cat || '', d.quad || '', d.memo || '', d.owner || '', d.due || '']);
+  });
+  sh.clearContents();
+  sh.getRange(1, 1, rows.length, 6).setValues(rows);
+  return true;
 }

@@ -1,6 +1,12 @@
 import { UNITS } from "../config/units";
 
-export type TabKey = number | "summary" | "progress" | "vision" | "rules";
+export type TabKey =
+  | number
+  | "summary"
+  | "issues"
+  | "progress"
+  | "vision"
+  | "rules";
 
 interface TabDef {
   key: TabKey;
@@ -12,6 +18,7 @@ interface TabDef {
 const LEAD: TabDef[] = [{ key: "summary", label: "経営サマリー" }];
 
 const EXTRA: TabDef[] = [
+  { key: "issues", label: "課題" },
   { key: "progress", label: "進捗" },
   { key: "vision", label: "目指す姿" },
   { key: "rules", label: "ルール・方針", active: ["#9C7B2E", "#9C7B2E"] },

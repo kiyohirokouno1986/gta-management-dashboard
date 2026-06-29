@@ -10,6 +10,7 @@ import { summaryPanel } from "./summary";
 
 export function renderPanel(ctx: Ctx, cur: TabKey): string {
   if (cur === "summary") return summaryPanel(ctx);
+  if (cur === "issues") return ""; // 課題ボードは App 側で React コンポーネントとして描画
   if (cur === "rules") return rulesPanel();
   if (cur === "vision") return visionPanel();
   if (cur === "progress") return progressPanel(ctx);

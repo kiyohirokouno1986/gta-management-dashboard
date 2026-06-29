@@ -29,8 +29,9 @@ function inlineSingleFile(): Plugin {
         let s = String(html.source);
         s = s.replace(/<link[^>]+rel="stylesheet"[^>]*>\s*/g, "");
         s = s.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>\s*/g, "");
-        s = s.replace("</head>", `<style>${css}</style></head>`);
-        s = s.replace("</body>", `<script>${js}</script></body>`);
+        // 関数置換を使う（CSS/JS 内の $&, $1 等が置換文字列として解釈されるのを防ぐ）
+        s = s.replace("</head>", () => `<style>${css}</style></head>`);
+        s = s.replace("</body>", () => `<script>${js}</script></body>`);
         html.source = s;
       }
       for (const n of remove) delete bundle[n];
