@@ -1,45 +1,43 @@
-# gas/ — 組織限定ウェブアプリ配信（Apps Script）
+# gas/ — 組織限定ウェブアプリ配信（Apps Script・ライブデータ版）
 
-ダッシュボードを **Google 組織内限定の URL** で配信するための Apps Script 一式です。
-`Index.html` は Vite の自己完結ビルド（CSS/JS/データを全てインライン化した単一HTML）で、`Code.gs` がそれを `HtmlService` で配信します。`appsscript.json` の `access: "DOMAIN"` により、閲覧は組織の Google アカウントでログインしたユーザーに限定されます（データは外部に出ません）。
+ダッシュボードを **Google 組織内限定の URL** で配信する Apps Script 一式です。
 
-`Index.html` を再生成するには、リポジトリのルートで:
+- `Code.gs` … `doGet` が **2つの Google シートをサーバー側で読み込み**、`Index.html` に注入して配信します。
+  - `LIVE_SHEET_ID` … 10期計画＆実績シート（売上・計画）
+  - `SNAP_SHEET_ID` … 部門別PL（連携用）シート（利益段・配賦人月）
+- `Index.html` … Vite の自己完結ビルド（CSS/JS/フォールバックデータをインライン化したSPA）。注入データがあればそれを使い、無ければ埋め込みデータで表示。
+- `appsscript.json` … `access: "DOMAIN"`（組織限定）。
 
-```bash
-npm run build:gas   # SINGLE ビルド → gas/Index.html を更新
-```
+## 月次更新（端末作業なし）
 
-## デプロイ手順（clasp・推奨）
+**「部門別PL（連携用）」シートを書き換えるだけ**です。再ビルドも再デプロイも不要で、ページを開けば最新になります。
 
-[clasp](https://github.com/google/clasp)（Apps Script CLI）でローカルから push できます。
+- 新しい月: シートに6行（`合計 / SaaS注文 / 不動産仲介 / CX / auka / コンサル`）を追加。`月` 列は `YYYY-MM`。
+- 既存月の修正: 該当セルを直すだけ。
+- 列: `月, 部門, 売上高, 売上総利益, 直接コスト①, 直接コスト②, 直接コスト計, 貢献利益, 間接コスト, 部門利益, 配賦人月`。
+
+売上・計画は 10期シート側を編集すれば同様に反映されます。
+
+## 部門別PLシートのIDを差し替える場合
+
+別のシートに切り替えたいときは `Code.gs` の `SNAP_SHEET_ID`（／`LIVE_SHEET_ID`）を新しいファイルIDに変更し、`clasp push --force` → 「デプロイを管理」で新バージョンをデプロイ（URLは不変）。
+
+## 初回デプロイ / コード更新（clasp）
+
+`Index.html` や `Code.gs` を変えたときだけ実行します（データ更新では不要）。
 
 ```bash
 npm i -g @google/clasp
-clasp login                       # 配信したい Google 組織アカウントでログイン
-
-# 既存のApps Scriptプロジェクトに載せる場合（元の「部門別PL」プロジェクト等）
-clasp clone <scriptId>            # 例: 既存プロジェクトのIDでclone
-#   → 既存ファイルを本フォルダの Code.gs / Index.html / appsscript.json で置き換え
-
-# もしくは新規作成
-clasp create --type webapp --title "ユニットMTGダッシュボード"
-
-clasp push                        # gas/ の3ファイルをアップロード
-clasp deploy                      # ウェブアプリとしてデプロイ
+clasp login
+clasp create --title "GTA-Dashboard" --rootDir gas   # 初回のみ。既存なら clasp clone <scriptId> --rootDir gas
+clasp push --force
+clasp deploy --deploymentId <DEPLOYMENT_ID>           # 既存と同じURLで更新（初回は素の clasp deploy）
 ```
 
-`.clasp.json`（clone/create で自動生成）の `rootDir` をこの `gas/` に向けると、`Code.gs` / `Index.html` / `appsscript.json` がそのまま対象になります。サンプルは `.clasp.json.example` を参照。
+`Index.html` を作り直す場合はリポジトリのルートで `npm run build:gas`（SINGLE ビルド → `gas/Index.html` 更新）。
 
-デプロイ後、Apps Script エディタの「デプロイ ▸ デプロイを管理」で
-**実行＝自分 / アクセス＝組織内の全員** を確認すると、`https://script.google.com/.../exec` の
-**組織限定URL** が得られます。これを Google Sites に「埋め込み」すれば、元の運用と同じ形になります。
+> 初回デプロイ後、Apps Script エディタの「デプロイ ▸ デプロイを管理」で **実行＝自分／アクセス＝組織内** を確認すると、`https://script.google.com/.../exec` の組織限定URLが得られます。Google Sites への埋め込みも可。
 
 ## 手動デプロイ（clasp を使わない場合）
 
-1. <https://script.google.com> で新規プロジェクト。
-2. `Code.gs` の中身を貼り付け。
-3. ＋（ファイル追加）▸ HTML ▸ 名前を **`Index`** にして `Index.html` の中身を貼り付け（**大文字小文字一致**。`Code.gs` の `createHtmlOutputFromFile('Index')` と合わせる）。
-4. プロジェクトの設定で「appsscript.json マニフェストを表示」を有効化し、内容を `appsscript.json` に合わせる（`access: "DOMAIN"`）。
-5. デプロイ ▸ 新しいデプロイ ▸ 種類＝ウェブアプリ ▸ 実行＝自分 / アクセス＝組織内 ▸ デプロイ。
-
-> 月次更新時は `npm run build:gas` で `Index.html` を作り直し、`clasp push`（または貼り替え）→ 再デプロイ。
+`Code.gs` をエディタに貼り付け、HTMLファイル名 **`Index`** に `Index.html` を貼り付け、`appsscript.json`（`access:"DOMAIN"`）を設定 → デプロイ ▸ ウェブアプリ ▸ 実行＝自分／アクセス＝組織内。
