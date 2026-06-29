@@ -7,7 +7,7 @@ import { renderPanel, FOOTER_NOTE } from "./views/render";
 export default function App() {
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [cur, setCur] = useState<TabKey>(0);
+  const [cur, setCur] = useState<TabKey>("summary");
 
   useEffect(() => {
     loadData()
@@ -21,7 +21,7 @@ export default function App() {
     <div className="wrap">
       <div className="title">ユニットMTG ダッシュボード</div>
       <div className="subtitle">
-        売上＝10期シート（クラウド・自動更新）／利益段・配賦人月＝部門別PL（Excelスナップショット）。単位：円
+        売上＝10期シート（クラウド・自動更新）／利益段・配賦人月＝部門別PL（Googleシート・自動更新）。単位：円
       </div>
       {err && <div className="err">読み込みエラー：{err}</div>}
       {!ctx && !err && <div id="status">データを読み込み中…</div>}

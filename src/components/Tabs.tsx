@@ -1,6 +1,6 @@
 import { UNITS } from "../config/units";
 
-export type TabKey = number | "progress" | "vision" | "rules";
+export type TabKey = number | "summary" | "progress" | "vision" | "rules";
 
 interface TabDef {
   key: TabKey;
@@ -8,6 +8,8 @@ interface TabDef {
   /** active 時の [背景色, 枠色]。既定は紫。 */
   active?: [string, string];
 }
+
+const LEAD: TabDef[] = [{ key: "summary", label: "経営サマリー" }];
 
 const EXTRA: TabDef[] = [
   { key: "progress", label: "進捗" },
@@ -23,7 +25,7 @@ export function Tabs({
   onSelect: (k: TabKey) => void;
 }) {
   const unitTabs: TabDef[] = UNITS.map((u, k) => ({ key: k, label: u.name }));
-  const all = [...unitTabs, ...EXTRA];
+  const all = [...LEAD, ...unitTabs, ...EXTRA];
   return (
     <div className="tabs">
       {all.map((t) => {

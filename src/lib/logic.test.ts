@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { live, snap, makeCtx } from "./data";
+import { buildSummaryRows, buildSummaryKpi } from "./summary";
 import { num, rowVals, rowVals12, salesPlan, salesPlan12 } from "./sheet";
 import { snapUnit, sumUnits } from "./snap";
 import { targetSeries } from "./targets";
@@ -106,6 +107,32 @@ describe("formatting", () => {
 describe("salesPlan12 length", () => {
   it("returns 12 months for 12+25 unit", () => {
     expect(salesPlan12(live, unit("chumon"))).toHaveLength(12);
+  });
+});
+
+describe("経営サマリー (summary)", () => {
+  const c = makeCtx({ live, snap });
+  const kpi = buildSummaryKpi(c);
+  it("KPI: 全社売上累計達成率99% / YoY 累計15%・当月23%", () => {
+    expect(kpi.salesRateCum).toBe(99);
+    expect(kpi.salesYoYCum).toBe(15);
+    expect(kpi.salesYoYMonth).toBe(23);
+  });
+  it("KPI: 黒字部門 3/5 ・ 営業利益(管理)累計 -2,239,273 ・ 配賦人月14", () => {
+    expect(kpi.profitUnits).toBe(3);
+    expect(kpi.profitUnitsTotal).toBe(5);
+    expect(kpi.opCumMgmt).toBe(-2239273);
+    expect(kpi.jinTotal).toBe(14);
+  });
+  const rows = buildSummaryRows(c);
+  it("行は全ユニット分・判定が目標カードと整合", () => {
+    expect(rows).toHaveLength(7);
+    const get = (k: string) => rows.find((r) => r.key === k)!;
+    expect(get("zen").judge).toBe("pass"); // 営業利益 2,822,629 ≥ 計画 633,660
+    expect(get("consul").judge).toBe("pass"); // 部門利益 計画ペース達成
+    expect(get("fudosan").srMonth).toBe(0); // 不動産仲介 当月売上0
+    expect(get("fudosan").judge).toBe("fail");
+    expect(get("chumon").judge).toBe("near"); // 4,734,544 vs 目標 4,830,400
   });
 });
 
