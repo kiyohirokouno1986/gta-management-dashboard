@@ -16,10 +16,6 @@
 
 var LIVE_SHEET_ID = '15ybH2lLFLpV0DqgeVWawsrArhKcL8jHdC_Yp7eQ5dhI';
 var SNAP_SHEET_ID = '1q9ZHh46foHIipRrDc--3abtD1IRSs75uEuI6gYnRcS8';
-var FIN_SHEET_ID = '1x-GyBRcrK3HcwIeh-L2YTAQA2x_dOLdNxIP_nL3UA1c';
-
-// 全社財務実績シートの利益段ヘッダ → FINキー
-var FIN_MAP = { '売上高': 'sales', '営業利益': 'op', '経常利益': 'ordinary' };
 
 // 部門別PLシートの「部門」名 → SNAPキー
 var UNIT_MAP = {
@@ -52,13 +48,11 @@ function doGet() {
     var snap = readSnap_();
     var months = snap.__months;
     delete snap.__months;
-    var fin = readFin_();
     injected =
       '<script>' +
       'window.__LIVE__=' + JSON.stringify(live) + ';' +
       'window.__SNAP__=' + JSON.stringify(snap) + ';' +
       'window.__MONTHS__=' + JSON.stringify(months) + ';' +
-      'window.__FIN__=' + JSON.stringify(fin) + ';' +
       '</script>';
   } catch (e) {
     // シート読み込み失敗時は注入しない → SPA は埋め込みデータで表示
@@ -182,47 +176,4 @@ function monthKey_(raw) {
     return y + '-' + (mo < 10 ? '0' + mo : '' + mo);
   }
   return ('' + raw).trim().replace(/\//g, '-');
-}
-
-/**
- * 全社財務実績シート（縦持ち：月 × 売上高/営業利益/経常利益）を
- * { months:["2月",…], sales:[…], op:[…], ordinary:[…] } に変換。
- */
-function readFin_() {
-  var ss = SpreadsheetApp.openById(FIN_SHEET_ID);
-  var sh = ss.getSheets()[0];
-  var v = sh.getDataRange().getValues();
-  var hr = -1;
-  for (var r = 0; r < v.length; r++) {
-    if (('' + v[r].join('')).indexOf('月') >= 0) { hr = r; break; }
-  }
-  if (hr < 0) throw new Error('全社財務実績シートのヘッダが見つかりません');
-  var header = v[hr], colMonth = -1, col = {};
-  for (var c = 0; c < header.length; c++) {
-    var h = ('' + header[c]).trim();
-    if (h === '月') colMonth = c;
-    else if (FIN_MAP[h]) col[FIN_MAP[h]] = c;
-  }
-  if (colMonth < 0) throw new Error('全社財務実績シートに「月」列がありません');
-
-  var rows = [];
-  for (var r2 = hr + 1; r2 < v.length; r2++) {
-    var m = monthKey_(v[r2][colMonth]);
-    if (!m) continue;
-    rows.push({ m: m, row: v[r2] });
-  }
-  rows.sort(function (a, b) { return a.m < b.m ? -1 : (a.m > b.m ? 1 : 0); });
-
-  var out = { months: [], sales: [], op: [], ordinary: [] };
-  rows.forEach(function (rec) {
-    var mm = parseInt(('' + rec.m).split('-')[1], 10);
-    out.months.push(isNaN(mm) ? ('' + rec.m) : (mm + '月'));
-    ['sales', 'op', 'ordinary'].forEach(function (k) {
-      var ci = col[k];
-      var raw = ci === undefined ? 0 : rec.row[ci];
-      var num = (raw === '' || raw === null || raw === undefined) ? 0 : parseFloat(('' + raw).replace(/,/g, ''));
-      out[k].push(isNaN(num) ? 0 : num);
-    });
-  });
-  return out;
 }
