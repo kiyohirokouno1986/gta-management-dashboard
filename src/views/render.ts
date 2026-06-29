@@ -6,8 +6,10 @@ import { unitPanel } from "./unitPanel";
 import { progressPanel } from "./progress";
 import { visionPanel } from "./vision";
 import { rulesPanel } from "./rules";
+import { summaryPanel } from "./summary";
 
 export function renderPanel(ctx: Ctx, cur: TabKey): string {
+  if (cur === "summary") return summaryPanel(ctx);
   if (cur === "rules") return rulesPanel();
   if (cur === "vision") return visionPanel();
   if (cur === "progress") return progressPanel(ctx);

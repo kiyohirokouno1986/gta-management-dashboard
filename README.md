@@ -54,7 +54,8 @@ npm run preview    # ビルド成果物のプレビュー
 | `src/lib/snap.ts` | `snapUnit` / `sumUnits`（zen=合計, saas=注文+仲介+CX） |
 | `src/lib/targets.ts` | `targetSeries` / `agg`（目標ライン×実績の共通化） |
 | `src/lib/format.ts` | `yen` / `mm`（金額・万円フォーマット） |
-| `src/views/` | `unitPanel` / `goalRow` / `matrix` / `plbox`(＋MQ) / `advice` / `progress` / `vision` / `rules` / `chart` |
+| `src/lib/summary.ts` | 経営サマリーの数値計算（KPI・全ユニット一覧。`targetSeries` 再利用） |
+| `src/views/` | `summary`(経営サマリー) / `unitPanel` / `goalRow` / `matrix` / `plbox`(＋MQ) / `advice` / `progress` / `vision` / `rules` / `chart` |
 | `src/data/` | `live.json` / `snap.json`（埋め込みデータ） |
 | `legacy/` | 正本（Apps Script 版 Code.gs / Page.html） |
 | `docs/` | 引き継ぎ書 |
@@ -137,8 +138,14 @@ npm run preview    # ビルド成果物のプレビュー
 
 ---
 
-## 進化ロードマップ（後続フェーズ）
+## 経営サマリー（既定タブ）
 
-1. **部門別PLの自動取込** — Excel手貼り（SNAP）を、Google シート化 or MoneyForward 会計からのライブ取得に。引き継ぎ書 §8 の最重要課題。
-2. **全ユニットに進捗グラフ展開** — 現状は全社のみの月次／累計 SVG を各ユニットへ。
-3. **目標率・最新月の設定UI化** — `TARGETS` の率や `LATEST` を画面から変更し全月再計算。CX 配賦人月の 3.75→3人月固定ルール反映も含む。
+開いた最初に表示される全社俯瞰タブ。上部にKPIカード（全社売上累計達成率＋前年同月比YoY／営業利益(管理)累計／黒字部門数／配賦人月合計）、下に全ユニットの一覧ヒートマップ（売上達成率・主目標の目標/実績/判定・前月比）を色分け表示。数値はすべて既存シートから自動計算（`src/lib/summary.ts`）。YoY は 10期実績シートの当年(row6)/前年(row5)から算出。
+
+## 進化ロードマップ
+
+- [x] **部門別PLのシート化（ライブ取得）** — Excel手貼り → Google シート編集のみで反映。
+- [x] **経営サマリー（全社一覧ヒートマップ）＋ 前年比(YoY)** — 開いた瞬間に全体が分かるトップ画面。
+- [ ] **課題マトリクス（緊急度×重要度）＋タスク管理** — 課題管理シート連携でプロット＋一覧（モック作成済み）。
+- [ ] **全ユニットに進捗グラフ展開** — 現状は全社のみの月次／累計 SVG を各ユニットへ。
+- [ ] **目標率・最新月の設定UI化** — `TARGETS` の率や `LATEST` を画面から変更し全月再計算。CX 配賦人月の 3.75→3人月固定ルール反映も含む。

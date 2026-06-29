@@ -25,4 +25,12 @@ describe("renderPanel smoke test", () => {
     expect(renderPanel(ctx, "vision")).toContain("経営と現場の一体化");
     expect(renderPanel(ctx, "rules")).toContain("分配ルール・方針");
   });
+
+  it("経営サマリーが描画され、KPIと全ユニットを含む", () => {
+    const html = renderPanel(ctx, "summary");
+    expect(html).toContain("経営サマリー（全社一覧）");
+    expect(html).toContain("99%"); // 全社売上累計達成率
+    expect(html).toContain("前年同月比"); // YoY
+    UNITS.forEach((u) => expect(html).toContain(u.name));
+  });
 });
