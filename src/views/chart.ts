@@ -3,16 +3,8 @@
 import { ML12 } from "../config/units";
 import { yen } from "../lib/format";
 
-/**
- * 計画 vs 実績の折れ線（万円）。zero=true で0ラインを描画。
- * act2 を渡すと第3の線（例: 財務実績MF）をオレンジで重ねる。
- */
-export function svgChart(
-  plan: number[],
-  act: number[],
-  zero: boolean,
-  act2?: number[],
-): string {
+/** 計画 vs 実績の折れ線（万円）。zero=true で0ラインを描画。 */
+export function svgChart(plan: number[], act: number[], zero: boolean): string {
   const W = 840,
     H = 196,
     x0 = 58,
@@ -20,10 +12,9 @@ export function svgChart(
     y0 = 16,
     y1 = H - 26;
   const P = plan.map((v) => v / 10000),
-    A = act.map((v) => v / 10000),
-    A2 = act2 ? act2.map((v) => v / 10000) : null;
-  let mx = Math.max(0, ...P, ...A, ...(A2 ?? [])),
-    mn = Math.min(0, ...P, ...A, ...(A2 ?? []));
+    A = act.map((v) => v / 10000);
+  let mx = Math.max(0, ...P, ...A),
+    mn = Math.min(0, ...P, ...A);
   const rng = mx - mn || 1;
   mx += rng * 0.08;
   mn -= rng * 0.05;
@@ -70,17 +61,6 @@ export function svgChart(
         1,
       )}" r="3.2" fill="#534AB7"/>`),
   );
-  if (A2) {
-    g += `<polyline points="${A2.map(
-      (v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1),
-    ).join(" ")}" fill="none" stroke="#D85A30" stroke-width="2.5" stroke-dasharray="5 3"/>`;
-    A2.forEach(
-      (v, i) =>
-        (g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(
-          1,
-        )}" r="3" fill="#D85A30"/>`),
-    );
-  }
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%" role="img">${g}</svg>`;
 }
 

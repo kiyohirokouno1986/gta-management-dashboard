@@ -25,12 +25,4 @@ describe("renderPanel smoke test", () => {
     expect(renderPanel(ctx, "vision")).toContain("経営と現場の一体化");
     expect(renderPanel(ctx, "rules")).toContain("分配ルール・方針");
   });
-
-  it("progress shows the MoneyForward financial line when fin data is present", () => {
-    const html = renderPanel(ctx, "progress");
-    expect(html).toContain("財務実績(MF)");
-    expect(html).toContain("財務(MF)");
-    // 財務線（オレンジ破線）が描画されている
-    expect(html).toContain("#D85A30");
-  });
 });
