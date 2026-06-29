@@ -23,6 +23,14 @@ export type Snap = Record<
 
 export type Mode = "month" | "cum";
 
+/** 全社の財務会計ベース実績（MoneyForward 由来）。各配列は月次。 */
+export interface FinData {
+  months: string[];
+  sales: number[];
+  op: number[];
+  ordinary: number[];
+}
+
 /**
  * Render context — replaces the canonical global state
  * (LIVE / SNAP / LATEST / MODE) with an explicit, testable object.
@@ -35,6 +43,8 @@ export interface Ctx {
   MODE: Mode;
   /** スナップショット各月の表示ラベル（例: ["2月","3月",…]）。月数は可変。 */
   months: string[];
+  /** 全社の財務会計ベース実績（MoneyForward）。進捗タブの比較線に使用。 */
+  fin: FinData;
 }
 
 /** 最新の実績がある月のインデックス（= snapshot 月数 - 1）。 */
