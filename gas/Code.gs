@@ -124,7 +124,7 @@ function readSnap_() {
   var records = [];
   for (var r2 = hr + 1; r2 < v.length; r2++) {
     var row = v[r2];
-    var m = ('' + row[colMonth]).trim();
+    var m = monthKey_(row[colMonth]);             // 日付/文字列どちらでも "YYYY-MM" に正規化
     var uName = ('' + row[colUnit]).trim();
     if (!m || !uName || !UNIT_MAP[uName]) continue;
     if (!(m in monthIndex)) { monthIndex[m] = monthOrder.length; monthOrder.push(m); }
@@ -158,8 +158,22 @@ function readSnap_() {
 
   // 月ラベル "YYYY-MM" → "M月"
   snap.__months = monthOrder.map(function (m) {
-    var mm = parseInt(m.split('-')[1], 10);
-    return mm + '月';
+    var mm = parseInt(('' + m).split('-')[1], 10);
+    return isNaN(mm) ? ('' + m) : (mm + '月');
   });
   return snap;
+}
+
+/**
+ * 「月」セルを "YYYY-MM" 文字列に正規化する。
+ * Googleシートは "2026-02" を日付値に自動変換することがあるため、
+ * Date でも文字列でも同じキーになるようにする（並び替え・ラベル生成の前提）。
+ */
+function monthKey_(raw) {
+  if (raw instanceof Date) {
+    var y = raw.getFullYear();
+    var mo = raw.getMonth() + 1;
+    return y + '-' + (mo < 10 ? '0' + mo : '' + mo);
+  }
+  return ('' + raw).trim().replace(/\//g, '-');
 }
