@@ -3,7 +3,6 @@
 import type { Ctx } from "../lib/types";
 import { lastAct } from "../lib/types";
 import type { MetricKey, Unit } from "../config/units";
-import { MONTHS } from "../config/units";
 import { snapUnit } from "../lib/snap";
 import { yen } from "../lib/format";
 import { mqBar } from "./chart";
@@ -61,7 +60,7 @@ export function plBox(ctx: Ctx, u: Unit): string {
   for (let m = 0; m <= N; m++)
     hd += `<th style="text-align:right;padding:5px 8px;${
       m === LATEST ? "background:#EEEDFE;" : ""
-    }color:#888780;font-weight:600">${MONTHS[m]}</th>`;
+    }color:#888780;font-weight:600">${ctx.months[m]}</th>`;
   const i = LATEST;
   const sumK = (k: MetricKey): number => {
     const a = snapUnit(ctx.snap, u.key, k);
@@ -71,7 +70,7 @@ export function plBox(ctx: Ctx, u: Unit): string {
   };
   const mqbox =
     mqBar(
-      `今月の利益構造（MQ・${MONTHS[i]}）`,
+      `今月の利益構造（MQ・${ctx.months[i]}）`,
       snapUnit(ctx.snap, u.key, "uri")[i],
       snapUnit(ctx.snap, u.key, "dctot")[i],
       snapUnit(ctx.snap, u.key, "kou")[i],
@@ -79,7 +78,7 @@ export function plBox(ctx: Ctx, u: Unit): string {
       snapUnit(ctx.snap, u.key, "bu")[i],
     ) +
     mqBar(
-      `累計の利益構造（MQ・2〜${MONTHS[N]}）`,
+      `累計の利益構造（MQ・2〜${ctx.months[N]}）`,
       sumK("uri"),
       sumK("dctot"),
       sumK("kou"),

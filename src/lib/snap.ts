@@ -9,7 +9,8 @@ export function sumUnits(
   keys: (keyof Snap)[],
   m: MetricKey,
 ): number[] {
-  return [0, 1, 2, 3].map((i) =>
+  const n = keys.length ? snap[keys[0]][m].length : 0;
+  return Array.from({ length: n }, (_, i) =>
     keys.reduce((s, k) => s + snap[k][m][i], 0),
   );
 }

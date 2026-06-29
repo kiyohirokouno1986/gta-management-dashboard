@@ -33,6 +33,8 @@ export interface Ctx {
   /** 表示する最新実績月のインデックス（0=2月 … 3=5月）。 */
   LATEST: number;
   MODE: Mode;
+  /** スナップショット各月の表示ラベル（例: ["2月","3月",…]）。月数は可変。 */
+  months: string[];
 }
 
 /** 最新の実績がある月のインデックス（= snapshot 月数 - 1）。 */

@@ -2,7 +2,7 @@
 
 import type { Ctx } from "../lib/types";
 import type { Unit } from "../config/units";
-import { MONTHS, TARGETS } from "../config/units";
+import { TARGETS } from "../config/units";
 import { targetSeries } from "../lib/targets";
 import { yen } from "../lib/format";
 
@@ -34,7 +34,7 @@ export function goalRow(ctx: Ctx, u: Unit): string {
    <div style="font-size:18px;font-weight:700"><span style="font-size:11px;background:#534AB7;color:#fff;border-radius:5px;padding:2px 8px;margin-right:6px">目標${num}</span>${t.label}！</div>
    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">
     <div style="flex:1;min-width:220px;background:#FAFAF7;border:1px solid #EFEDE6;border-radius:10px;padding:11px">
-     <div style="font-size:11px;color:#888780;margin-bottom:2px">当月（${MONTHS[i]}）</div>
+     <div style="font-size:11px;color:#888780;margin-bottom:2px">当月（${ctx.months[i]}）</div>
      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><span style="font-size:23px;font-weight:700;color:${mCol}">${yen(
        ai,
      )}</span>${
@@ -46,7 +46,7 @@ export function goalRow(ctx: Ctx, u: Unit): string {
        ti,
      )}</div></div>
     <div style="flex:1;min-width:220px;background:#EEEDFE;border:1.5px solid #CECBF6;border-radius:10px;padding:11px">
-     <div style="font-size:11px;color:#3C3489;font-weight:600;margin-bottom:2px">累計（2〜${MONTHS[i]} YTD）</div>
+     <div style="font-size:11px;color:#3C3489;font-weight:600;margin-bottom:2px">累計（2〜${ctx.months[i]} YTD）</div>
      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><span style="font-size:23px;font-weight:700">${yen(
        sumAct,
      )}</span><span style="font-size:17px;font-weight:700;color:${cCol}">${cTxt}</span></div>

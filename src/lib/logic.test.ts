@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { live, snap } from "./data";
+import { live, snap, makeCtx } from "./data";
 import { num, rowVals, rowVals12, salesPlan, salesPlan12 } from "./sheet";
 import { snapUnit, sumUnits } from "./snap";
 import { targetSeries } from "./targets";
@@ -106,5 +106,28 @@ describe("formatting", () => {
 describe("salesPlan12 length", () => {
   it("returns 12 months for 12+25 unit", () => {
     expect(salesPlan12(live, unit("chumon"))).toHaveLength(12);
+  });
+});
+
+describe("dynamic month count (sheet may add months)", () => {
+  // 5ヶ月分のスナップショットを擬似生成（6月を追加）
+  const grow = (a: number[]) => [...a, a[a.length - 1]];
+  const snap5 = JSON.parse(JSON.stringify(snap));
+  for (const u of Object.keys(snap5)) {
+    for (const m of Object.keys(snap5[u])) {
+      snap5[u][m] = grow(snap5[u][m]);
+    }
+  }
+  it("sumUnits follows the array length, not a hardcoded 4", () => {
+    expect(sumUnits(snap5, ["chumon", "fudosan", "cx"], "bu")).toHaveLength(5);
+  });
+  it("makeCtx derives LATEST and labels for 5 months", () => {
+    const ctx5 = makeCtx({ live, snap: snap5 });
+    expect(ctx5.LATEST).toBe(4);
+    expect(ctx5.months).toEqual(["2月", "3月", "4月", "5月", "6月"]);
+  });
+  it("makeCtx honors injected month labels when provided", () => {
+    const ctx5 = makeCtx({ live, snap: snap5, months: ["2月", "3月", "4月", "5月", "6月"] });
+    expect(ctx5.months[4]).toBe("6月");
   });
 });
