@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ユニットMTGダッシュボード</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}
+body{margin:0;background:#FAF9F5;color:#2C2C2A;font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',system-ui,sans-serif;padding:18px}
+.wrap{max-width:940px;margin:0 auto}
+.title{font-size:18px;font-weight:600;margin:0 0 2px}
+.subtitle{font-size:12px;color:#888780;margin-bottom:16px}
+.sec-h{font-size:13px;font-weight:600;color:#5F5E5A;margin:0 0 10px}
+.card{background:#fff;border:1px solid #E5E3DB;border-radius:12px;padding:16px}
+.grid3{display:flex;gap:12px;flex-wrap:wrap}.grid3>div{flex:1;min-width:220px}
+.kpibig{font-size:20px;font-weight:600}
+.muted{color:#888780;font-size:12px}
+.pill{display:inline-block;font-size:11px;border-radius:20px;padding:3px 11px;font-weight:600}
+.jinchip{display:inline-flex;align-items:baseline;gap:3px;background:#EEEDFE;color:#3C3489;border:1px solid #CECBF6;border-radius:9px;padding:4px 10px}
+.jinchip b{font-size:18px;font-weight:700}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font-size:13px;padding:7px 12px;border-radius:9px;border:1px solid #D3D1C7;background:#fff;cursor:pointer;color:#2C2C2A}
+.tab.active{background:#534AB7;color:#fff;border-color:#534AB7}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:#888780;font-weight:600;text-align:right;padding:5px 6px;border-bottom:1px solid #E5E3DB}
+th.l{text-align:left}
+td{padding:5px 6px;text-align:right;font-variant-numeric:tabular-nums}
+td.l{text-align:left}
+tr.cost td{color:#5F5E5A}
+tr.kou td{font-weight:600;background:#F6F5FE}
+tr.bu td{font-weight:600;background:#E1F5EE}
+tr.ind td{background:#FBF3EF}
+.delta-up{color:#0F6E56}.delta-dn{color:#993C1D}
+.mbtn{font-size:11px;padding:4px 9px;border-radius:7px;border:1px solid #D3D1C7;background:#fff;cursor:pointer;margin-right:5px}
+.mbtn.active{background:#EEEDFE;border-color:#CECBF6;color:#3C3489;font-weight:600}
+.note{font-size:11px;color:#888780;margin-top:12px;line-height:1.7}
+#status{font-size:12px;color:#888780;padding:8px 0}
+.err{background:#FAECE7;border:1px solid #F5C4B3;color:#993C1D;border-radius:10px;padding:12px;font-size:13px}
+.bar-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px}
+.bar-mon{width:28px;color:#888780;flex:none}
+.bar-track{flex:1;background:#F1EFE8;border-radius:4px;height:15px;overflow:hidden}
+.bar-fill{height:15px;border-radius:4px}
+.bar-val{width:96px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.spark{display:flex;align-items:flex-end;gap:5px;height:42px;margin-top:6px}
+.spark>div{flex:1;background:#F0997B;border-radius:3px 3px 0 0;min-height:3px}
+.brkbox{background:#FAFAF7;border:1px solid #ECEAE2;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+</style></head><body><div class="wrap">
+<div class="title">ユニットMTG ダッシュボード</div>
+<div class="subtitle">売上＝10期シート（クラウド・自動更新）／利益段・配賦人月＝部門別PL（Excelスナップショット）。単位：円</div>
+<div id="status">クラウドシートを読み込み中…</div>
+<div id="app" style="display:none">
+  <div id="unitView">
+    <div class="tabs" id="tabs"></div>
+    <div class="card" id="unitPanel"></div>
+    <div class="note" id="note"></div>
+  </div>
+</div></div>
+<script>window.__LIVE__ = <?!= liveJson ?>;</script>
+<script>
+const FILE_ID="15ybH2lLFLpV0DqgeVWawsrArhKcL8jHdC_Yp7eQ5dhI";
+const TOOL="mcp__f7d9a570-4e57-41c7-80c0-813bd1feccc3__read_file_content";
+const MONTHS=["2月","3月","4月","5月"];
+const SNAP={"consul": {"uri": [3449083, 3449083, 3299801, 3345747], "gp": [3449083, 3449083, 3299801, 3345747], "dc1": [839536, 796783, 797599, 797599], "dc2": [443024, 457699, 529556, 560116], "dctot": [1282560, 1254482, 1327155, 1357715], "kou": [2166523, 2194601, 1972646, 1988032], "ind": [424965, 681923, 423682, 436530], "bu": [1741558, 1512678, 1548964, 1551502], "jin": [1.0, 1.0, 1.0, 1.0]}, "auka": {"uri": [2883564, 995917, 447076, 3612560], "gp": [2883564, 995917, 447076, 3612560], "dc1": [1691342, 1438959, 1238713, 1262061], "dc2": [1038465, 800334, 220162, 503513], "dctot": [2729807, 2239293, 1458875, 1765574], "kou": [153757, -1243376, -1011799, 1846986], "ind": [1274896, 1704806, 953284, 982193], "bu": [-1121139, -2948182, -1965083, 864793], "jin": [3.0, 2.5, 2.25, 2.25]}, "chumon": {"uri": [11636000, 12174000, 10854000, 11314000], "gp": [11636000, 12174000, 10854000, 11314000], "dc1": [2660304, 3649378, 3314634, 3309989], "dc2": [2383733, 1563789, 1254544, 1086816], "dctot": [5044038, 5213167, 4569178, 4396805], "kou": [6591962, 6960833, 6284822, 6917195], "ind": [2549792, 4091535, 2542090, 2182651], "bu": [4042170, 2869298, 3742732, 4734544], "jin": [6.0, 6.0, 6.0, 5.0]}, "fudosan": {"uri": [0, 200000, 100000, 0], "gp": [0, 200000, 100000, 0], "dc1": [1361686, 1462222, 1243224, 1352877], "dc2": [293004, 496716, 770661, 923911], "dctot": [1654690, 1958938, 2013885, 2276788], "kou": [-1654690, -1758938, -1913885, -2276788], "ind": [849931, 1363845, 847363, 873061], "bu": [-2504621, -3122783, -2761248, -3149849], "jin": [2.0, 2.0, 2.0, 2.0]}, "cx": {"uri": [1946640, 2037920, 2033840, 2189920], "gp": [1946640, 2037920, 2033840, 2189920], "dc1": [1966384, 1739096, 1575591, 1606920], "dc2": [87873, 89260, 86638, 124372], "dctot": [2054257, 1828356, 1662229, 1731292], "kou": [-107617, 209564, 371611, 458628], "ind": [1912344, 3068652, 1588807, 1636989], "bu": [-2019961, -2859088, -1217196, -1178361], "jin": [4.5, 4.5, 3.75, 3.75]}, "zen": {"uri": [19915287, 18856920, 16734717, 20462227], "gp": [19915287, 18856920, 16734717, 20462227], "dc1": [8519253, 9086438, 8169761, 8329446], "dc2": [4246099, 3407798, 2861561, 3198728], "dctot": [12765352, 12494236, 11031322, 11528174], "kou": [7149935, 6362684, 5703395, 8934053], "ind": [7011929, 10910761, 6355226, 6111424], "bu": [138006, -4548077, -651831, 2822629], "jin": [16.5, 16.0, 15.0, 14.0]}};
+const yen=v=>Math.round(v).toLocaleString();
+const jinFmt=v=>Number.isInteger(v)?(""+v):(""+v);
+function num(s){if(s==null)return 0;s=(""+s).replace(/\\/g,'').replace(/,/g,'').replace(/[％%]/g,'').trim();if(s===''||s==='ー'||s==='-')return 0;const v=parseFloat(s);return isNaN(v)?0:v;}
+function parseSheet(text){const lines=text.split('\n');const hdr=[];
+ lines.forEach((l,i)=>{if(l.indexOf('2026/02')>=0&&l.indexOf('2026/03')>=0&&l.indexOf('通期')>=0)hdr.push(i);});
+ function block(h){const rows=[];for(let i=h+2;i<lines.length;i++){const l=lines[i];if(l.trim().charAt(0)!=='|')break;const c=l.split('|').slice(1,-1).map(x=>x.trim());if(c.length<6)break;rows.push(c);}return rows;}
+ return {plan:block(hdr[0]),act:block(hdr[1])};}
+function rowVals(b,R){const r=b[R-3]||[];const o=[];for(let c=0;c<4;c++)o.push(num(r[c])*1000);return o;}
+function rowExpr(b,e){if((""+e).indexOf('+')>=0){const[a,c]=(""+e).split('+').map(Number);return add(rowVals(b,a),rowVals(b,c));}return rowVals(b,Number(e));}
+function add(a,b){return a.map((x,i)=>x+b[i]);}
+function sumUnits(keys,m){return [0,1,2,3].map(i=>keys.reduce((s,k)=>s+SNAP[k][m][i],0));}
+function snapUnit(key,m){if(key==='zen')return SNAP['zen'][m];if(key==='saas')return sumUnits(['chumon','fudosan','cx'],m);return SNAP[key][m];}
+let LIVE=(window.__LIVE__||{plan:[],act:[]}),cur=0,metric='uri';
+const UNITS=[
+ {key:'zen',name:'全社',tag:'全社合計',desc:'5部門の合計。会社全体の損益',plan:6,brk:[['全社合計','6']]},
+ {key:'saas',name:'SaaS全体',tag:'収益（SaaS3事業の合計）',desc:'注文・不動産仲介・CXの合算',plan:8,brk:[['SaaS注文','12+25'],['不動産仲介','18'],['CX','30']]},
+ {key:'chumon',name:'SaaS注文',tag:'収益部門',desc:'当期の部門利益（黒字）で評価する',plan:'12+25',brk:[['注文住宅（ALL GRIT：初期＋MRR）','12'],['BPO（らくらく集客）','25']]},
+ {key:'fudosan',name:'不動産仲介',tag:'投資部門',desc:'先行投資フェーズ。当期の赤字を許容し、KPI（査定・契約数）で進捗を見る',plan:18,brk:[['不動産仲介売上','18']]},
+ {key:'cx',name:'CX',tag:'収益部門（一部 投資フェーズ）',desc:'コール代行は収益、コンサル・動画作成は立ち上げ投資フェーズ',plan:30,brk:[['コール代行','31'],['コンサル・動画作成','35']]},
+ {key:'auka',name:'auka',tag:'収益部門',desc:'当期の部門利益（黒字）で評価する',plan:39,brk:[['自社チャネル','40'],['提携・TLチャネル','44']]},
+ {key:'consul',name:'コンサル',tag:'収益部門',desc:'当期の部門利益（黒字）で評価する',plan:48,brk:[['コンサル売上','48']]}
+];
+
+const CX2=[600000, 570000, 660000, 660000, 750000, 750000, 840000, 840000, 930000, 1020000, 1110000, 1110000];
+const TARGETS={
+ zen:[{label:'営業利益を 事業計画ライン以上 に',kind:'op_line'}],
+ saas:[{label:'部門利益を 計画ペース以上 に',kind:'plan_margin',m:'bu',rate:0.05}],
+ chumon:[{label:'部門利益を 計画ペース以上 に',kind:'plan_margin',m:'bu',rate:0.40}],
+ fudosan:[{label:'売上を 計画（事業計画）達成 に',kind:'plan_sales'},
+          {label:'貢献利益の赤字を ▲200円以内 に（維持）',kind:'flat',m:'kou',th:-2000000}],
+ cx:[{label:'貢献利益（直接）を 黒字キープ（0以上）に',kind:'flat',m:'kou',th:0},
+     {label:'貢献利益を 計画ペースまで伸ばす（コンサル受注で積み増し）',kind:'plan_margin',m:'kou',rate:0.25}],
+ auka:[{label:'貢献利益を 計画ペース以上 に',kind:'plan_margin',m:'kou',rate:0.50}],
+ consul:[{label:'部門利益を 計画ペース以上 に',kind:'plan_margin',m:'bu',rate:0.45}]
+}
+
+const ML12=["2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月","1月"];
+function rowVals12(b,R){const r=b[R-3]||[];const o=[];for(let c=0;c<12;c++)o.push(num(r[c])*1000);return o;}
+function salesPlan12(u){if(u.plan==='12+25')return add(rowVals12(LIVE.plan,12),rowVals12(LIVE.plan,25));return rowVals12(LIVE.plan,u.plan);}
+function tgtShort(t){if(t.kind==='plan_sales')return '売上 目標（計画）';if(t.kind==='monthly')return '貢献利益 目標（月次）';return (t.m==='bu'?'部門利益 目標':'貢献利益 目標');}
+function targetLine(u){
+ const list=TARGETS[u.key];if(!list)return '';const nA=LATEST;
+ let body='';
+ list.forEach((t,n)=>{
+  let tArr,actArr,metric;
+  if(t.kind==='plan_sales'){tArr=salesPlan12(u);metric='uri';}
+  else if(t.kind==='monthly'){tArr=t.arr.map(Number);metric=t.m;}
+  else{tArr=new Array(12).fill(t.th);metric=t.m;}
+  actArr=snapUnit(u.key,metric);
+  const num=list.length>1?(['①','②','③'][n]):'';
+  let cells='';
+  for(let k=0;k<12;k++){
+   const hl=k===nA?'background:#EEEDFE;':'';
+   let actHtml='';
+   if(k<actArr.length){const pass=actArr[k]>=tArr[k];actHtml=`<div style="color:${pass?'#0F6E56':'#993C1D'};font-size:10px">${yen(actArr[k])}</div>`;}
+   cells+=`<td style="${hl}padding:3px 5px;text-align:right;border-left:1px solid #EFEDE6"><div>${yen(tArr[k])}</div>${actHtml}</td>`;
+  }
+  body+=`<tr><td style="padding:3px 6px;white-space:nowrap;position:sticky;left:0;background:#fff">${num} ${tgtShort(t)}</td>${cells}</tr>`;
+ });
+ let hd='';ML12.forEach((m,k)=>{hd+=`<th style="${k===nA?'background:#EEEDFE;':''}padding:3px 5px;text-align:right;border-left:1px solid #EFEDE6;font-weight:600;color:#888780">${m}</th>`;});
+ return `<details style="margin-bottom:12px"><summary style="cursor:pointer;font-size:12px;color:#534AB7">月次の目標ライン（6月以降の将来分を含む・単位:円）</summary>
+  <div style="overflow-x:auto;margin-top:8px"><table style="font-size:11px;border-collapse:collapse;min-width:560px">
+  <thead><tr><th style="padding:3px 6px;text-align:left;position:sticky;left:0;background:#fff;color:#888780;font-weight:600">指標 ＼ 月</th>${hd}</tr></thead>
+  <tbody>${body}</tbody></table></div>
+  <div style="font-size:10px;color:#888780;margin-top:4px">上段＝目標、下段＝実績（緑=達成/赤=未達、2〜5月のみ）。色付き列＝最新実績月。売上目標は10期計画ライブ、利益目標は初期値。</div></details>`;
+}
+
+function tgtStatus(pass,near){if(pass)return['◯ 達成','#0F6E56','#E1F5EE','#9FE1CB'];if(near)return['△ あと少し','#9A7B12','#FBF3EF','#F5C4B3'];return['✗ 未達','#993C1D','#FAECE7','#F5C4B3'];}
+function banner(u){
+ const list=TARGETS[u.key];if(!list)return '';const i=LATEST;let rows='';
+ list.forEach((t,n)=>{
+  let act,tgtTxt='',extra='',pass,near;
+  if(t.kind==='plan_sales'){act=snapUnit(u.key,'uri')[i];const pl=salesPlan(u)[i];const rate=pl>0?Math.round(act/pl*100):null;tgtTxt='計画 '+yen(pl);extra=rate!==null?rate+'%':'';pass=rate!==null&&rate>=100;near=rate!==null&&rate>=90;}
+  else if(t.kind==='monthly'){act=snapUnit(u.key,t.m)[i];const tg=t.arr[i];tgtTxt='目標 '+yen(tg);pass=act>=tg;near=act>=tg*0.9;}
+  else{act=snapUnit(u.key,t.m)[i];pass=act>=t.th;near=act>=t.th-Math.max(Math.abs(t.th)*0.1,200000);}
+  const ss=tgtStatus(pass,near);const num=list.length>1?(['①','②','③'][n]+' '):'';
+  rows+=`<div style="background:${ss[2]};border:1px solid ${ss[3]};border-radius:10px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+   <span style="font-size:11px;background:#534AB7;color:#fff;border-radius:6px;padding:2px 8px;flex:none">目標${num}</span>
+   <span style="font-size:14px;font-weight:600;flex:1;min-width:220px">${t.label}！</span>
+   <span style="font-size:12px;color:${ss[1]};font-weight:600;flex:none">${MONTHS[i]} ${yen(act)}${tgtTxt?' ／ '+tgtTxt:''} ${extra} ${ss[0]}</span></div>`;
+ });
+ return `<div style="margin-bottom:12px">${rows}</div>`;
+}
+
+function tagColor(t){if(t.indexOf('投資部門')===0)return['#E6F1FB','#185FA5'];if(t.indexOf('全社')===0)return['#F1EFE8','#5F5E5A'];if(t.indexOf('一部')>=0)return['#EEEDFE','#3C3489'];return['#E1F5EE','#0F6E56'];}
+function salesPlan(u){if(u.plan==='12+25')return add(rowVals(LIVE.plan,12),rowVals(LIVE.plan,25));return rowVals(LIVE.plan,u.plan);}
+function sparkBars(arr){let max=1;arr.forEach(v=>max=Math.max(max,Math.abs(v)));return '<div class="spark">'+arr.map(v=>`<div title="${yen(v)}" style="height:${Math.max(8,Math.round(Math.abs(v)/max*42))}px"></div>`).join('')+'</div>';}
+function compCards(){
+ const i=3;
+ function card(title,plan,act){
+  const rate=plan[i]>0?Math.round(act[i]/plan[i]*100):null;const diff=act[i]-plan[i];
+  const rc=(rate!==null&&rate>=100)?'delta-up':'delta-dn';
+  return `<div class="card"><div class="muted">${title}（5月）</div>
+   <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-top:3px">
+   <div><div class="muted">実績</div><div class="kpibig">${yen(act[i])}</div></div>
+   <div><div class="muted">計画</div><div style="font-size:15px">${yen(plan[i])}</div></div>
+   <div><div class="muted">達成率</div><div class="kpibig ${rc}">${rate!==null?rate+'%':'—'}</div></div></div></div>`;
+ }
+ const sP=rowVals(LIVE.plan,6),sA=rowVals(LIVE.act,6),eP=rowVals(LIVE.plan,4),eA=rowVals(LIVE.act,4);
+ const pool=SNAP['zen']['ind'];const mom=pool[3]-pool[2];
+ const poolCard=`<div class="card" style="border-color:#F5C4B3">
+   <div class="muted">間接費プール（全社・配賦前の合計）<span style="color:#D85A30">固定費モニタ</span></div>
+   <div style="display:flex;gap:14px;align-items:baseline;margin-top:3px">
+    <div><div class="muted">5月</div><div class="kpibig">${yen(pool[3])}</div></div>
+    <div><div class="muted">前月比</div><div class="${mom<=0?'delta-up':'delta-dn'}" style="font-size:14px">${(mom>=0?'+':'')+yen(mom)}</div></div></div>
+   ${sparkBars(pool)}
+   <div class="muted" style="margin-top:4px">2〜5月。各部門へ配賦している間接費の総額</div></div>`;
+ document.getElementById('compRow').innerHTML=card('全社 売上高',sP,sA)+card('全社 営業利益',eP,eA);
+}
+const ROWS=[
+ ['売上高','uri','plan'],['売上総利益','gp',''],
+ ['− 直接コスト①（人件費・稼働）','dc1','cost'],['− 直接コスト②（獲得・運用）','dc2','cost'],
+ ['　直接コスト計（①＋②）','dctot','cost'],['貢献利益（売上−直接コスト）','kou','kou'],
+ ['− 間接コスト（配賦分）','ind','ind'],['部門利益','bu','bu']
+];
+function trend(u){
+ const arr=snapUnit(u.key,metric);const lab={'uri':'売上高','kou':'貢献利益','bu':'部門利益'}[metric];
+ const showPlan=(metric==='uri');const plan=showPlan?salesPlan(u):null;
+ let max=1;for(let k=0;k<4;k++){max=Math.max(max,Math.abs(arr[k]),showPlan?Math.abs(plan[k]):0);}
+ let h=`<div style="font-size:13px;font-weight:600;margin-bottom:8px">月次トレンド：${lab}</div>`;
+ for(let k=0;k<4;k++){const ap=Math.max(2,Math.round(Math.abs(arr[k])/max*100));const ac=arr[k]<0?'#D85A30':'#534AB7';
+  if(showPlan){const pp=Math.max(2,Math.round(Math.abs(plan[k])/max*100));
+   h+=`<div style="margin:6px 0"><div class="muted" style="margin-bottom:2px">${MONTHS[k]}</div>
+   <div class="bar-row" style="margin:2px 0"><span class="bar-mon">計画</span><span class="bar-track"><span class="bar-fill" style="width:${pp}%;background:#CECBF6"></span></span><span class="bar-val">${yen(plan[k])}</span></div>
+   <div class="bar-row" style="margin:2px 0"><span class="bar-mon">実績</span><span class="bar-track"><span class="bar-fill" style="width:${ap}%;background:${ac}"></span></span><span class="bar-val">${yen(arr[k])}</span></div></div>`;
+  }else{h+=`<div class="bar-row"><span class="bar-mon">${MONTHS[k]}</span><span class="bar-track"><span class="bar-fill" style="width:${ap}%;background:${ac}"></span></span><span class="bar-val">${yen(arr[k])}</span></div>`;}}
+ return h;
+}
+function brkBox(u){
+ if(!u.brk)return '';const i=3;const ttl=u.brk.length>1?'売上内訳':'売上';
+ let rows='';
+ for(const [lab,e] of u.brk){const pl=rowExpr(LIVE.plan,e)[i],ac=rowExpr(LIVE.act,e)[i];
+  const rate=pl>0?Math.round(ac/pl*100):null;
+  rows+=`<tr><td class="l">${lab}</td><td>${yen(pl)}</td><td>${yen(ac)}</td><td>${rate!==null?`<span class="${rate>=100?'delta-up':'delta-dn'}">${rate}%</span>`:'—'}</td></tr>`;}
+ return `<div class="brkbox"><div style="font-size:12px;font-weight:600;margin-bottom:6px">${ttl}（5月・出所：10期シート）</div>
+  <table><thead><tr><th class="l">商材</th><th>計画</th><th>実績</th><th>達成率</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function rowExpr12(b,e){if((""+e).indexOf('+')>=0){const p=(""+e).split('+').map(Number);return add(rowVals12(b,p[0]),rowVals12(b,p[1]));}return rowVals12(b,Number(e));}
+function targetSeries(u,t){
+ if(t.kind==='plan_sales')return {tgt12:salesPlan12(u),act:snapUnit(u.key,'uri'),isRate:true,label:'売上 達成率',sub:'計画対比%'};
+ if(t.kind==='monthly')return {tgt12:t.arr.map(Number),act:snapUnit(u.key,t.m),isRate:false,label:(t.m==='kou'?'貢献利益':'部門利益'),sub:'月次目標'};
+ if(t.kind==='plan_margin')return {tgt12:salesPlan12(u).map(v=>Math.round(v*t.rate)),act:snapUnit(u.key,t.m),isRate:false,label:(t.m==='bu'?'部門利益':'貢献利益'),sub:'計画ペース'};
+ if(t.kind==='op_line')return {tgt12:rowVals12(LIVE.plan,4),act:snapUnit(u.key,'bu'),isRate:false,label:'営業利益',sub:'事業計画'};
+ return {tgt12:new Array(12).fill(t.th),act:snapUnit(u.key,t.m),isRate:false,label:(t.m==='bu'?'部門利益':'貢献利益'),sub:'目標'+yen(t.th)};
+}
+function goalRow(u){
+ const list=TARGETS[u.key],i=LATEST;let html='';
+ list.forEach((t,n)=>{
+  const s=targetSeries(u,t);const ai=s.act[i],ti=s.tgt12[i];
+  const mRate=s.isRate?(ti>0?Math.round(ai/ti*100):null):null;
+  const mPass=s.isRate?(mRate!==null&&mRate>=100):(ai>=ti);
+  const mNear=(s.isRate?(mRate!==null&&mRate>=90):(ai>=ti-Math.max(Math.abs(ti)*0.1,200000)))&&!mPass;
+  const mCol=mPass?'#0F6E56':(mNear?'#9A7B12':'#993C1D');const mMk=mPass?'◯ 達成':(mNear?'△ あと少し':'✗ 未達');
+  const sumAct=s.act.slice(0,i+1).reduce((a,b)=>a+b,0),sumTgt=s.tgt12.slice(0,i+1).reduce((a,b)=>a+b,0);
+  const cRate=sumTgt>0?Math.round(sumAct/sumTgt*100):null;const cPass=cRate!==null?cRate>=100:sumAct>=sumTgt;const cNear=cRate!==null&&cRate>=90&&!cPass;
+  const cCol=cPass?'#0F6E56':(cNear?'#9A7B12':'#993C1D');const cTxt=cRate!==null?cRate+'%':(cPass?'◯':'✗');
+  const num=list.length>1?['①','②','③'][n]:'';
+  html+=`<div style="padding:12px 0;border-bottom:1px solid #F0EEE7">
+   <div style="font-size:18px;font-weight:700"><span style="font-size:11px;background:#534AB7;color:#fff;border-radius:5px;padding:2px 8px;margin-right:6px">目標${num}</span>${t.label}！</div>
+   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">
+    <div style="flex:1;min-width:220px;background:#FAFAF7;border:1px solid #EFEDE6;border-radius:10px;padding:11px">
+     <div style="font-size:11px;color:#888780;margin-bottom:2px">当月（${MONTHS[i]}）</div>
+     <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><span style="font-size:23px;font-weight:700;color:${mCol}">${yen(ai)}</span>${s.isRate&&mRate!==null?`<span style="font-size:15px;font-weight:700;color:${mCol}">${mRate}%</span>`:''}<span style="font-size:14px;font-weight:700;color:${mCol}">${mMk}</span></div>
+     <div style="font-size:12px;color:#888780;margin-top:2px">目標 ${yen(ti)}</div></div>
+    <div style="flex:1;min-width:220px;background:#EEEDFE;border:1.5px solid #CECBF6;border-radius:10px;padding:11px">
+     <div style="font-size:11px;color:#3C3489;font-weight:600;margin-bottom:2px">累計（2〜${MONTHS[i]} YTD）</div>
+     <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><span style="font-size:23px;font-weight:700">${yen(sumAct)}</span><span style="font-size:17px;font-weight:700;color:${cCol}">${cTxt}</span></div>
+     <div style="font-size:12px;color:#888780;margin-top:2px">累計目標 ${yen(sumTgt)}</div></div>
+   </div></div>`;
+ });
+ return html;
+}
+function matCell(text,kind,hl,cum){
+ const map={pass:['#E1F5EE','#0F6E56'],near:['#FBF3EF','#9A7B12'],fail:['#FAECE7','#993C1D'],future:['#EEEDFE','#3C3489']};
+ const c=map[kind];let bd= cum? 'border-left:2px solid #534AB7;font-weight:700;' : (hl?'box-shadow:inset 0 0 0 2px #534AB7;':'border-left:1px solid #EFEDE6;');
+ if(cum&&hl)bd+='box-shadow:inset 0 0 0 2px #534AB7;';
+ return `<td style="${bd}background:${c[0]};color:${c[1]};padding:5px 6px;text-align:center;white-space:nowrap">${text}</td>`;
+}
+function matRow(num,s){
+ const i=LATEST;let cells='';
+ for(let k=0;k<=i;k++){
+  if(s.isRate){const r=s.tgt12[k]>0?Math.round(s.act[k]/s.tgt12[k]*100):null;const pass=r!==null&&r>=100,near=r!==null&&r>=90;cells+=matCell(r!==null?r+'%':'—',pass?'pass':(near?'near':'fail'),k===i,false);}
+  else{const pass=s.act[k]>=s.tgt12[k];const near=s.act[k]>=s.tgt12[k]-Math.max(Math.abs(s.tgt12[k])*0.1,200000);cells+=matCell(yen(s.act[k]),pass?'pass':(near?'near':'fail'),k===i,false);}
+ }
+ for(let k=i+1;k<12;k++)cells+=matCell(yen(s.tgt12[k]),'future',false,false);
+ const total=s.tgt12.reduce((a,b)=>a+b,0);
+ return `<tr><td style="text-align:left;padding:5px 8px;white-space:nowrap;position:sticky;left:0;background:#fff;font-weight:600">${num} ${s.label}<br><span style="font-size:10px;color:#888780;font-weight:400">${s.sub}</span></td>${cells}<td style="padding:5px 8px;text-align:right;font-weight:600;background:#F6F5FE">${yen(total)}</td></tr>`;
+}
+function buildMatrix(u){
+ const list=TARGETS[u.key];let rows='';
+ list.forEach((t,n)=>{const num=list.length>1?['①','②','③'][n]:'';rows+=matRow(num,targetSeries(u,t));});
+ if(u.brk)u.brk.forEach(p=>{rows+=matRow('└',{tgt12:rowExpr12(LIVE.plan,p[1]),act:rowExpr(LIVE.act,p[1]),isRate:true,label:p[0],sub:'達成率%'});});
+ const i=LATEST;let hd='';
+ for(let k=0;k<12;k++){
+  hd+=`<th style="padding:5px 6px;text-align:center;${k===i?'background:#EEEDFE;':(k>i?'background:#F6F5FE;':'')}color:#888780;font-weight:600;border-left:1px solid #EFEDE6">${ML12[k]}</th>`;
+ }
+ return `<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;font-size:11.5px;min-width:980px;width:100%">
+  <thead><tr><th style="text-align:left;padding:5px 8px;position:sticky;left:0;background:#fff;color:#888780">目標／月</th>${hd}<th style="padding:5px 8px;color:#888780">通期</th></tr></thead>
+  <tbody>${rows}</tbody></table></div>
+  <div style="font-size:10px;color:#888780;margin-top:5px">緑=達成／黄=あと少し／赤=未達。紫=この先の目標。枠=今月。単位 円・%。売上=10期計画ライブ、利益=計画売上×目標率で逆算（全社は10期営業利益ライン）。</div>`;
+}
+function mqBar(label,pq,vq,mq,f,g){
+ if(!(pq>0))return '';
+ const vqp=vq/pq*100,mqp=mq/pq*100,fp=Math.max(0,f)/pq*100,gp=Math.max(0,g)/pq*100;
+ return `<div style="margin-top:12px"><div style="font-size:12px;font-weight:600;color:#5F5E5A;margin-bottom:6px">${label}</div>
+  <div style="display:flex;height:24px;border-radius:6px;overflow:hidden;font-size:10px">
+   <div style="width:${vqp}%;background:#D3D1C7;display:flex;align-items:center;padding-left:6px">変動費 ${yen(vq)}</div>
+   <div style="width:${mqp}%;background:#9FE1CB;color:#0F6E56;display:flex;align-items:center;padding-left:6px">限界利益 ${yen(mq)}</div></div>
+  <div style="display:flex;height:24px;margin-top:3px;font-size:10px"><div style="width:${vqp}%"></div>
+   <div style="width:${fp}%;background:#F0997B;color:#712B13;border-radius:6px 0 0 6px;display:flex;align-items:center;padding-left:6px">固定費 ${yen(f)}</div>
+   <div style="width:${gp}%;min-width:64px;background:#534AB7;color:#fff;border-radius:0 6px 6px 0;display:flex;align-items:center;padding-left:6px">利益 ${yen(g)}</div></div></div>`;
+}
+function plBox(u){
+ const N=LASTACT();let body='';
+ const defs=[['売上高','uri',''],['売上総利益','gp',''],['− 直接コスト①（人件費・稼働）','dc1','cost'],['− 直接コスト②（獲得・運用）','dc2','cost'],['　直接コスト計','dctot','cost'],['貢献利益','kou','kou'],['− 間接コスト（配賦）','ind','ind'],['部門利益','bu','bu']];
+ defs.forEach(d=>{const arr=snapUnit(u.key,d[1]);let cells='',sum=0;
+  for(let m=0;m<=N;m++){const v=arr[m];sum+=v;const hl=m===LATEST?'background:#F6F5FE;':'';const neg=((d[2]==='kou'||d[2]==='bu')&&v<0)?'color:#993C1D;':'';cells+=`<td style="text-align:right;padding:4px 8px;${hl}${neg}">${yen(v)}</td>`;}
+  const cumst=d[2]==='bu'?'background:#D9EFE3;color:#0F6E56;font-weight:700;':(d[2]==='kou'?'background:#E8F0FB;':'background:#F1F8F4;');
+  const lblst=(d[2]==='kou'||d[2]==='bu')?'font-weight:700;':(d[2]==='cost'?'color:#5F5E5A;':'');
+  const rowbg=d[2]==='kou'?'background:#F6F5FE;':(d[2]==='bu'?'background:#EFF7F2;':'background:#fff;');
+  body+=`<tr><td style="text-align:left;padding:4px 8px;${lblst}position:sticky;left:0;${rowbg}">${d[0]}</td>${cells}<td style="text-align:right;padding:4px 8px;${cumst}">${yen(sum)}</td></tr>`;
+ });
+ let hd='';for(let m=0;m<=N;m++)hd+=`<th style="text-align:right;padding:5px 8px;${m===LATEST?'background:#EEEDFE;':''}color:#888780;font-weight:600">${MONTHS[m]}</th>`;
+ const i=LATEST;
+ const sumK=(k)=>{const a=snapUnit(u.key,k);let x=0;for(let m=0;m<=N;m++)x+=a[m];return x;};
+ const mqbox=mqBar(`今月の利益構造（MQ・${MONTHS[i]}）`,snapUnit(u.key,'uri')[i],snapUnit(u.key,'dctot')[i],snapUnit(u.key,'kou')[i],snapUnit(u.key,'ind')[i],snapUnit(u.key,'bu')[i])
+  +mqBar(`累計の利益構造（MQ・2〜${MONTHS[N]}）`,sumK('uri'),sumK('dctot'),sumK('kou'),sumK('ind'),sumK('bu'));
+ return `<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;font-size:11.5px;min-width:620px;width:100%"><thead><tr><th style="text-align:left;padding:5px 8px;position:sticky;left:0;background:#fff;color:#888780">利益段</th>${hd}<th style="text-align:right;padding:5px 8px;background:#E1F5EE;color:#0F6E56;font-weight:700">累計</th></tr></thead><tbody>${body}</tbody></table></div>${mqbox}`;
+}
+function advicePieces(u){
+ const i=LATEST, list=TARGETS[u.key], s=targetSeries(u,list[0]);
+ const ai=agg(s.act), ti=agg(s.tgt12);
+ const prev=(MODE!=='cum'&&i>0)?s.act[i-1]:null;
+ const trend=prev!==null?(ai>prev*1.02?'前月から改善':(ai<prev*0.98?'前月から悪化':'前月並み')):'';
+ const sumA=s.act.slice(0,i+1).reduce((a,b)=>a+b,0), sumT=s.tgt12.slice(0,i+1).reduce((a,b)=>a+b,0);
+ const cRate=sumT>0?Math.round(sumA/sumT*100):null;
+ const out=[];
+ if(u.key==='fudosan'){
+  const pl=agg(salesPlan(u)); const sr=pl>0?Math.round(agg(snapUnit('fudosan','uri'))/pl*100):0;
+  out.push(`投資部門。${MODE==='cum'?'累計の':'当月の'}売上は計画比 ${sr}%。利益でなく売上・KPI（登録率や契約数）で進捗を見る局面。`);
+  const kou=agg(snapUnit('fudosan','kou'));
+  out.push(kou< -2000000?`貢献利益 ${yen(kou)} は赤字上限（▲200万）を超過。先行投資の範囲を点検したい。`:`貢献利益 ${yen(kou)} は赤字上限の範囲内。`);
+ }else if(u.key==='cx'){
+  const kou=agg(snapUnit('cx','kou')), jin=agg(snapUnit('cx','jin'));
+  const perj=jin?Math.round(kou/jin):0, be=Math.round(agg(SNAP.zen.ind)/agg(SNAP.zen.jin));
+  out.push(kou>=0?`直接の貢献利益は ${yen(kou)} で黒字キープ（◯）。`:`直接の貢献利益が ${yen(kou)} と赤字。まず直接黒字の回復が最優先。`);
+  out.push(`人月あたり貢献利益は ${yen(perj)}。損益分岐 ${yen(be)} を ${perj>=be?'上回り生産性は良好':'下回り、配賦後は厳しい'}。`);
+  const cxc=agg(rowExpr(LIVE.act,'35'));
+  out.push(`粗利率の高いコンサル・動画（当月 ${yen(cxc)}）の受注を増やし、貢献利益の月次目標まで引き上げるのが鍵。`);
+ }else{
+  const pass=ai>=ti, gap=ti-ai, lab=s.label.replace(' 達成率','');
+  out.push(pass?`${MODE==='cum'?'累計の':'当月の'}${lab}は計画ペースを達成（${yen(ai)}）。${trend?trend+'。':''}`:`${MODE==='cum'?'累計の':'当月の'}${lab}は ${yen(ai)} で、計画ペース ${yen(ti)} に ${yen(gap)} 不足。${trend?trend+'。':''}`);
+  if(MODE!=='cum'){if(sumA<0)out.push(`累計の${lab}はまだマイナス（${yen(sumA)}）。後半での挽回が必要。`);
+  else if(cRate!==null)out.push(`累計の達成率は ${cRate}%。${cRate>=100?'通期計画に乗っている。':'計画線を下回り、後半での挽回が必要。'}`);}
+  if(u.brk&&u.brk.length>1){let worst=null,wr=9999;u.brk.forEach(pr=>{const pl=agg(rowExpr12(LIVE.plan,pr[1])),ac=agg(rowExpr(LIVE.act,pr[1]));const r=pl>0?Math.round(ac/pl*100):null;if(r!==null&&r<wr){wr=r;worst=pr[0];}});if(worst&&wr<100)out.push(`内訳では「${worst}」が ${wr}% と相対的に弱く、ここの積み増しが効く。`);}
+  if(u.key==='zen')out.push('全社黒字化に向け、各部門の計画ペース維持が前提。');
+ }
+ return out;
+}
+function adviceCard(u){
+ const ps=advicePieces(u);
+ return `<div style="margin-top:14px;background:#F6F5FE;border:1px solid #D9D2F2;border-radius:10px;padding:13px 15px">
+  <div style="font-size:12px;font-weight:600;color:#3C3489;margin-bottom:6px">今月のアドバイス（自動分析）</div>
+  <div style="font-size:13px;color:#23262F;line-height:1.65">${ps.join(' ')}</div></div>`;
+}
+
+const UNIT_RULES={
+ zen:{ev:'全社の営業利益を事業計画ライン以上（黒字化）',note:'5部門の合計。各部門の計画ペース維持が前提。'},
+ saas:{ev:'SaaS3事業のグロスで黒字を評価',note:'注文＋不動産仲介＋CXの合算で見る。'},
+ chumon:{ev:'部門利益の黒字（計画ペース）',rate:'40%',note:'全社の屋台骨。MRRと新規・解約を注視。'},
+ fudosan:{ev:'売上の計画達成・KPIで評価（投資・赤字許容）',note:'貢献利益の赤字は▲200万以内。利益でなくKPIで進捗を見る。'},
+ cx:{ev:'まず直接の貢献利益で黒字、次に配賦後',rate:'25%',note:'アルバイトは何名でも配賦上は「1人月」に固定。CXは アルバイト分（1）＋ アルバイト以外の山内・降旗（2名）＝ 合計3人月。コンサル・動画は立ち上げ投資フェーズ。'},
+ auka:{ev:'貢献利益の黒字（計画ペース）',rate:'50%',note:'売上の振れが大きい。先行きの相談カウンター件数を見る。'},
+ consul:{ev:'部門利益の黒字（計画ペース）',rate:'45%',note:'高粗利の収益柱。安定維持。'}
+};
+function unitRuleCard(u){
+ const i=LATEST;const jin=(u.key==='saas')?sumUnits(['chumon','fudosan','cx'],'jin')[i]:snapUnit(u.key,'jin')[i];
+ const r=UNIT_RULES[u.key]||{};const tc=tagColor(u.tag);
+ return `<div style="margin-top:14px;background:#FAFAF8;border:1px solid #ECEAE2;border-radius:10px;padding:12px 14px">
+  <div style="font-size:12px;font-weight:600;color:#5F5E5A;margin-bottom:8px">このユニットの扱い（分配ルール・方針）</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:${r.note?'8px':'0'}">
+   <span style="font-size:11px;background:${tc[0]};color:${tc[1]};border-radius:6px;padding:3px 9px;font-weight:600">区分：${u.tag}</span>
+   <span style="font-size:11px;background:#EEEDFE;color:#3C3489;border-radius:6px;padding:3px 9px;font-weight:600">配賦人月：${jin}</span>
+   ${r.rate?`<span style="font-size:11px;background:#EEEDFE;color:#3C3489;border-radius:6px;padding:3px 9px;font-weight:600">目標利益率：${r.rate}</span>`:''}
+   <span style="font-size:11px;background:#EAF6F0;color:#0F6E56;border-radius:6px;padding:3px 9px;font-weight:600">評価：${r.ev||'—'}</span>
+  </div>
+  ${r.note?`<div style="font-size:12px;color:#5F5E5A;line-height:1.5">${r.note}</div>`:''}
+ </div>`;
+}
+function _mm(v){return Math.round(v/10000).toLocaleString();}
+function svgChart(plan,act,zero){
+ const W=840,H=196,x0=58,x1=W-14,y0=16,y1=H-26;
+ const P=plan.map(v=>v/10000), A=act.map(v=>v/10000);
+ let mx=Math.max(0,...P,...A), mn=Math.min(0,...P,...A);const rng=(mx-mn)||1;mx+=rng*0.08;mn-=rng*0.05;if(!zero){mn=0;}else if(mn>0){mn=0;}
+ const n=P.length,dx=(x1-x0)/(n-1);const X=i=>x0+i*dx,Y=v=>y1-(v-mn)/(mx-mn)*(y1-y0);
+ let g='';
+ for(let q=0;q<=4;q++){const v=mn+(mx-mn)*q/4,y=Y(v);g+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x1}" y2="${y.toFixed(1)}" stroke="#EEEDE7"/><text x="${x0-5}" y="${(y+3).toFixed(1)}" font-size="9" fill="#aaa" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;}
+ if(zero){const yz=Y(0);g+=`<line x1="${x0}" y1="${yz.toFixed(1)}" x2="${x1}" y2="${yz.toFixed(1)}" stroke="#C9C7BE" stroke-width="1.2"/>`;}
+ for(let i=0;i<n;i++)g+=`<text x="${X(i).toFixed(1)}" y="${H-9}" font-size="8.5" fill="#aaa" text-anchor="middle">${ML12[i]}</text>`;
+ g+=`<polyline points="${P.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}" fill="none" stroke="#CECBF6" stroke-width="2.5"/>`;
+ g+=`<polyline points="${A.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}" fill="none" stroke="#534AB7" stroke-width="3"/>`;
+ A.forEach((v,i)=>g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3.2" fill="#534AB7"/>`);
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%" role="img">${g}</svg>`;
+}
+function progressPanel(){
+ const i=LATEST;
+ const uriP=rowVals12(LIVE.plan,6), uriA=SNAP.zen.uri.slice(0,i+1);
+ const opP=rowVals12(LIVE.plan,4), opA=SNAP.zen.bu.slice(0,i+1);
+ const cum=a=>{let o=[],x=0;a.forEach(v=>{x+=v;o.push(x);});return o;};
+ const uriAC=cum(uriA),uriPC=cum(uriP),opAC=cum(opA),opPC=cum(opP);
+ const uriRate=uriPC[i]>0?Math.round(uriAC[i]/uriPC[i]*100):null;
+ const sec=(title,callout,m,c)=>`<div style="background:#fff;border:1px solid #E5E3DB;border-radius:12px;padding:14px;margin-bottom:14px">
+   <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:14px;font-weight:700">${title}</span><span style="font-size:12px;color:#888780">${callout}</span></div>
+   <div style="font-size:11px;color:#888780;margin-bottom:2px">月次（計画 対 実績・万円）</div>${m}
+   <div style="font-size:11px;color:#888780;margin:10px 0 2px">累計の進捗（万円・実績は2〜${MONTHS[i]}、計画線の右端＝通期目標）</div>${c}</div>`;
+ const uc=`累計 実績 ${_mm(uriAC[i])}万 ／ 計画 ${_mm(uriPC[i])}万　達成率 ${uriRate}%`;
+ const oc=`累計 実績 ${_mm(opAC[i])}万 ／ 計画 ${_mm(opPC[i])}万`;
+ return `<div style="font-size:18px;font-weight:700;margin-bottom:2px">進捗（計画 対 実績）</div>
+  <div style="font-size:12px;color:#888780;margin-bottom:12px">全社・単位 万円　<span style="color:#CECBF6;font-weight:700">━</span> 計画　<span style="color:#534AB7;font-weight:700">━</span> 実績</div>
+  ${sec('売上',uc,svgChart(uriP,uriA,false),svgChart(uriPC,uriAC,false))}
+  ${sec('営業利益',oc,svgChart(opP,opA,true),svgChart(opPC,opAC,true))}
+  <div style="font-size:11px;color:#888780">0ライン超えが黒字。営業利益は計画で5月以降プラスに転じ、通期で +2,579万（黒字化）を目指す。</div>`;
+}
+function visionPanel(){
+ return `<div style="font-size:18px;font-weight:700;margin-bottom:4px">目指す姿 ── 経営と現場の一体化</div>
+ <div style="font-size:12px;color:#888780;margin-bottom:14px">なぜ目標・実績を連動させるのか（このダッシュボードで実現したいこと）</div>
+ <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap">
+  <div style="flex:1;min-width:280px;background:#FAECE7;border:1px solid #F5C4B3;border-radius:14px;padding:16px;box-sizing:border-box">
+   <div style="font-size:12px;font-weight:600;color:#993C1D;margin-bottom:8px">現状</div>
+   <div style="font-size:16px;font-weight:600;color:#993C1D;margin-bottom:12px">部門別PL（実績のみ）</div>
+   <div style="background:#fff;border:1px solid #F5C4B3;border-radius:10px;padding:11px;margin-bottom:10px">
+    <div style="font-size:12px;color:#5F5E5A">目標の概念がない</div>
+    <div style="font-size:13px;color:#2C2C2A;margin-top:3px">実績の結果だけが並ぶ</div></div>
+   <div style="text-align:center;color:#D85A30;font-size:16px;margin:2px 0 8px">↓</div>
+   <div style="background:#fff;border:1px dashed #F0997B;border-radius:10px;padding:11px">
+    <div style="font-size:13px;font-weight:600;color:#993C1D">争点が「経費の分配」だけになる</div>
+    <div style="font-size:12px;color:#5F5E5A;margin-top:5px;line-height:1.55">投資部門も収益部門も同じ物差しで評価され、役割の違いが見えない</div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:56px">
+   <div style="color:#534AB7;font-size:22px">→</div><div style="font-size:11px;color:#534AB7;margin-top:3px;text-align:center">連動<br>させる</div></div>
+  <div style="flex:1.15;min-width:300px;background:#EEEDFE;border:1px solid #CECBF6;border-radius:14px;padding:16px;box-sizing:border-box">
+   <div style="font-size:12px;font-weight:600;color:#3C3489;margin-bottom:8px">あるべき姿</div>
+   <div style="font-size:16px;font-weight:600;color:#3C3489;margin-bottom:12px">経営と現場の一体化</div>
+   <div style="background:#fff;border:1px solid #CECBF6;border-radius:10px;padding:11px">
+    <div style="font-size:11px;color:#7F77DD;font-weight:600">経営レイヤー</div>
+    <div style="font-size:14px;font-weight:600;color:#3C3489;margin-top:3px">ボード会議：目標・実績管理シート</div>
+    <div style="font-size:12px;color:#534AB7;margin-top:3px">＝ めざす目標</div></div>
+   <div style="text-align:center;color:#534AB7;font-size:13px;margin:6px 0">↕ 連動</div>
+   <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:10px;padding:11px">
+    <div style="font-size:11px;color:#1D9E75;font-weight:600">現場レイヤー</div>
+    <div style="font-size:14px;font-weight:600;color:#0F6E56;margin-top:3px">部門別PL</div>
+    <div style="font-size:12px;color:#0F6E56;margin-top:3px">＝ 日々の実績</div></div>
+   <div style="margin-top:12px;background:#534AB7;border-radius:10px;padding:10px 12px;text-align:center">
+    <span style="font-size:14px;font-weight:600;color:#fff">目標 × 実績でベクトルがそろう</span></div>
+  </div>
+ </div>
+ <div style="margin-top:16px;background:#F1EFE8;border:1px solid #D3D1C7;border-radius:14px;padding:16px">
+  <div style="font-size:14px;font-weight:600;color:#2C2C2A;margin-bottom:4px">目標を持つと、部門ごとに求める役割が変わる</div>
+  <div style="font-size:12px;color:#5F5E5A;margin-bottom:14px;line-height:1.55">実績だけでは全部門が「黒字かどうか」で一律に裁かれる。目標があれば、投資と収益で違う期待値を置ける。</div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+   <div style="flex:1;min-width:240px;background:#fff;border:1px solid #D3D1C7;border-radius:10px;padding:13px">
+    <div style="font-size:13px;font-weight:600;color:#185FA5;margin-bottom:4px">投資部門</div>
+    <div style="font-size:12.5px;color:#2C2C2A;line-height:1.55">目標＝先行投資と将来の収益づくり。短期の赤字を許容して攻める。</div></div>
+   <div style="flex:1;min-width:240px;background:#fff;border:1px solid #D3D1C7;border-radius:10px;padding:13px">
+    <div style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:4px">収益部門</div>
+    <div style="font-size:12.5px;color:#2C2C2A;line-height:1.55">目標＝当期の利益貢献。黒字化と収益性の達成で評価する。</div></div>
+  </div>
+ </div>`;
+}
+function rulesPanel(){
+ const card=(t,b)=>`<div style="background:#fff;border:1px solid #E5E3DB;border-radius:10px;padding:12px 14px;margin-bottom:10px"><div style="font-size:13px;font-weight:700;color:#3C3489;margin-bottom:5px">${t}</div><div style="font-size:12.5px;color:#23262F;line-height:1.6">${b}</div></div>`;
+ return `<div style="font-size:18px;font-weight:700;margin-bottom:4px">分配ルール・方針</div>
+  <div style="font-size:12px;color:#888780;margin-bottom:14px">部門別 管理会計の配賦と評価の決めごと（6/30 MTGの叩き台ベース・随時更新）</div>
+  ${card('目的','全社で黒字化（部門別で1円以上が最低目標）するために、部門ごとの数字を正しく見えるようにする。管理会計は「計器」。数字をいじって良く見せるためではなく、正しく映すのが目的。')}
+  ${card('① 配賦キー','間接費は配賦人月で按分。配賦前の間接費プール総額と、配賦後の各部門負担の両方を見せる。')}
+  ${card('② アルバイトの配賦（最重要）','アルバイトスタッフは何名でも「分配人数1」でカウント（人数連動をやめる）。CXは アルバイト分（何名でも1）＋ アルバイト以外の山内・降旗（2名）＝ 合計3人月（固定）。理由：アルバイト費用は直接経費（人件費）に計上済みで、頭数を数えると間接費まで二重に効くため。')}
+  ${card('③ 部門の括り','注文・不動産仲介・コンサルCXは SaaS全体のグロスで見る。')}
+  ${card('④ 投資／収益の区分','投資部門＝赤字許容（達成率・売上で評価）／収益部門＝黒字（部門利益）で評価。区分は四半期で見直す。')}
+  ${card('⑤ 評価の単位','① 直接（貢献利益）で黒字か → ② 配賦後（部門利益）で黒字か の二段で見る。')}
+  ${card('目標の決め方','売上＝10期計画（月次・通期）。利益＝計画売上×目標利益率（注文40%／コンサル45%／auka50%／CX25%／SaaS全体5%）。全社の営業利益＝10期計画のラインを使用。率は初期値で随時調整。')}
+  ${card('前提','費用は詳細＋証憑を5日までに経理へ提出。これが全ての前提。')}`;
+}
+function unitPanel(idx){
+ const u=UNITS[idx],i=LATEST;const tc=tagColor(u.tag);
+ const jin=(u.key==='saas')?sumUnits(['chumon','fudosan','cx'],'jin')[i]:snapUnit(u.key,'jin')[i];
+ const head=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:14px;border-bottom:2px solid #F0EEE7">
+   <span style="font-size:24px;font-weight:700">${u.name}</span>
+   <span style="font-size:14px;background:${tc[0]};color:${tc[1]};border-radius:8px;padding:5px 14px;font-weight:700">${u.tag}</span>
+   <span style="font-size:14px;background:#EEEDFE;color:#3C3489;border-radius:8px;padding:5px 14px;font-weight:600">配賦人月 <b style="font-size:18px">${jin}</b> 人</span></div>`;
+ const detail=`<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:#3C3489;margin-bottom:6px">部門別PLの利益段 ＋ 今月の利益構造（MQ）</div>${plBox(u)}</div>`;
+ return head+unitRuleCard(u)+`<div style="padding-top:4px">${goalRow(u)}</div>`+adviceCard(u)+
+   `<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:#3C3489;margin-bottom:4px">目標 × 月マトリクス（過去・この先の目標を一望）</div>${buildMatrix(u)}</div>`+detail;
+}
+
+let LATEST=3,MODE='month';
+function LASTACT(){return (SNAP.zen.uri.length-1);}
+function agg(arr){if(MODE==='cum'){var n=LASTACT(),x=0;for(var k=0;k<=n;k++)x+=(arr[k]||0);return x;}return arr[LATEST];}
+function focusLabel(){return MODE==='cum'?('累計 2〜'+MONTHS[LASTACT()]):MONTHS[LATEST];}
+const man=v=>Math.round(v/10000).toLocaleString();
+function mqModel(){
+ const i=LATEST,z=SNAP.zen;
+ const sK=sumUnits(['chumon','fudosan','cx'],'kou')[i],sF=sumUnits(['chumon','fudosan','cx'],'ind')[i],sG=sumUnits(['chumon','fudosan','cx'],'bu')[i];
+ const prod=[['コンサル（河野）','consul'],['SaaS注文','chumon'],['マケプレ（auka）','auka'],['CX','cx'],['不動産仲介','fudosan']]
+   .map(([n,k])=>[n,SNAP[k].kou[i]/SNAP[k].jin[i],SNAP[k].jin[i]]);
+ return {i,pq:z.uri[i],vq:z.dctot[i],mq:z.kou[i],f:z.ind[i],g:z.bu[i],
+  contrib:[['SaaS全体',sK],['コンサル（河野）',SNAP.consul.kou[i]],['マケプレ（auka）',SNAP.auka.kou[i]]],
+  prod, be:z.ind[i]/z.jin[i],
+  saas:{k:sK,f:sF,g:sG,a:SNAP.chumon.kou[i],b:SNAP.fudosan.kou[i],c:SNAP.cx.kou[i]}};
+}
+function mqBoxHTML(d){
+ const vqp=(d.vq/d.pq*100),mqp=(d.mq/d.pq*100);
+ const fW=Math.max(0,d.f)/d.pq*100, gW=Math.max(0,d.g)/d.pq*100;
+ return `<div class="card" style="margin-bottom:14px"><div style="font-size:13px;font-weight:600">① 売上 → 変動費 ＋ 限界利益 → 固定費 ＋ 利益（全社・${MONTHS[d.i]}）</div>
+ <div style="font-size:11px;color:#888780;margin-bottom:12px">単位：円</div>
+ <div style="display:flex;height:50px;border-radius:7px;overflow:hidden;font-size:12px">
+  <div style="width:${vqp}%;background:#D3D1C7;display:flex;flex-direction:column;justify-content:center;padding-left:10px"><span>変動費 VQ</span><b>${yen(d.vq)}</b></div>
+  <div style="width:${mqp}%;background:#9FE1CB;color:#0F6E56;display:flex;flex-direction:column;justify-content:center;padding-left:10px"><span>限界利益 MQ</span><b>${yen(d.mq)}</b></div></div>
+ <div style="font-size:11px;color:#888780;margin:4px 0 10px">売上 PQ ＝ ${yen(d.pq)} 円</div>
+ <div style="display:flex;height:50px;font-size:12px">
+  <div style="width:${vqp}%"></div>
+  <div style="width:${fW}%;background:#F0997B;color:#712B13;border-radius:7px 0 0 7px;display:flex;flex-direction:column;justify-content:center;padding-left:10px"><span>固定費 F（間接費）</span><b>${yen(d.f)}</b></div>
+  <div style="width:${gW}%;min-width:80px;background:#534AB7;color:#fff;border-radius:0 7px 7px 0;display:flex;flex-direction:column;justify-content:center;padding-left:8px"><span>利益 G</span><b>${yen(d.g)}</b></div></div></div>`;
+}
+function hbar(label,val,max,color,valTxt,extra){
+ const w=Math.max(2,Math.abs(val)/max*100);const neg=val<0;
+ return `<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px">
+  <span style="width:140px;flex:none;text-align:right">${label}</span>
+  <div style="flex:1;height:20px"><div style="width:${w}%;height:20px;background:${color};border-radius:4px;display:flex;align-items:center;justify-content:${neg?'flex-start':'flex-end'};padding:0 6px;color:#fff;min-width:84px">${valTxt}</div></div>
+  <span style="width:60px;flex:none;color:#888780;text-align:right">${extra||''}</span></div>`;
+}
+function mqContribHTML(d){
+ const max=Math.max(...d.contrib.map(c=>Math.abs(c[1])),d.f);
+ const frac=d.f/max;
+ let bars='';
+ d.contrib.sort((a,b)=>b[1]-a[1]).forEach(([n,v])=>{const col=v<0?'#D85A30':(v>=d.f?'#1D9E75':'#5DCAA5');
+  bars+=hbar(n,v,max,col,yen(v),Math.round(v/d.mq*100)+'%');});
+ return `<div class="card" style="margin-bottom:14px"><div style="font-size:13px;font-weight:600">② 部門別の限界利益（MQ）貢献（${MONTHS[d.i]}）</div>
+ <div style="font-size:11px;color:#888780;margin-bottom:14px">SaaSは全体でまとめ。点線＝固定費F（${yen(d.f)}円）。シェアは全社MQに対する比率。単位：円</div>
+ <div style="position:relative"><div style="position:absolute;left:calc(148px + (100% - 216px)*${frac.toFixed(4)});top:0;bottom:24px;border-left:2px dashed #D85A30"></div>
+ <div style="position:absolute;left:calc(148px + (100% - 216px)*${frac.toFixed(4)} + 4px);top:0;font-size:10px;color:#D85A30">固定費F</div>
+ <div style="margin-top:16px">${bars}</div></div></div>`;
+}
+function mqProdHTML(d){
+ const max=Math.max(...d.prod.map(p=>Math.abs(p[1])));const frac=d.be/max;
+ let bars='';
+ d.prod.sort((a,b)=>b[1]-a[1]).forEach(([n,v,j])=>{const col=v<0?'#D85A30':(v>=d.be?'#1D9E75':'#F0997B');
+  bars+=hbar(n,v,max,col,yen(v),('人月 '+j));});
+ return `<div class="card" style="margin-bottom:14px"><div style="font-size:13px;font-weight:600">案2：人月あたり限界利益（生産性ランキング）（${MONTHS[d.i]}）</div>
+ <div style="font-size:11px;color:#888780;margin-bottom:14px">配賦人月1人あたりの限界利益。点線＝損益分岐（固定費F÷全社${SNAP.zen.jin[d.i]}人月＝約${yen(d.be)}/人月）。単位：円/人月</div>
+ <div style="position:relative"><div style="position:absolute;left:calc(148px + (100% - 216px)*${frac.toFixed(4)});top:0;bottom:24px;border-left:2px dashed #D85A30"></div>
+ <div style="position:absolute;left:calc(148px + (100% - 216px)*${frac.toFixed(4)} + 4px);top:0;font-size:10px;color:#D85A30">分岐${yen(d.be)}</div>
+ <div style="margin-top:16px">${bars}</div></div></div>`;
+}
+function mqWaterfallHTML(d){
+ const a=d.saas.a,b=d.saas.b,c=d.saas.c,f=d.saas.f,g=d.saas.g;
+ const lv=[0,a,a+b,a+b+c,a+b+c-f];const tot=g;
+ const maxL=Math.max(...lv,tot,0),minL=Math.min(...lv,tot,0);
+ const top=20,bot=200,H=bot-top,range=(maxL-minL)||1,sc=H/range;const y=v=>bot-(v-minL)*sc;
+ const xs=[50,145,240,335,430],cw=60;
+ const segs=[['注文',0,a,a>=0?'#1D9E75':'#D85A30'],['仲介',1,b,b>=0?'#5DCAA5':'#D85A30'],['CX',2,c,c>=0?'#5DCAA5':'#D85A30'],['固定費F',3,-f,'#F0997B']];
+ let bars='',conn='',labs='',names='';
+ segs.forEach(([nm,k,delta,col])=>{const a0=lv[k],a1=lv[k+1];const t=Math.max(a0,a1),bm=Math.min(a0,a1);const x=xs[k];
+  bars+=`<rect x="${x}" y="${y(t).toFixed(1)}" width="${cw}" height="${Math.max(1,(t-bm)*sc).toFixed(1)}" fill="${col}"/>`;
+  const lc=delta<0?'#993C1D':'#2C2C2A';const ly=delta<0&&nm=='固定費F'?(y(t)+ (t-bm)*sc/2):y(t)-5;
+  labs+=`<text x="${x+cw/2}" y="${(nm=='固定費F'?ly+4:y(t)-5).toFixed(1)}" font-size="10.5" font-weight="600" fill="${nm=='固定費F'?'#fff':lc}" text-anchor="middle">${(delta>=0?'+':'')+yen(delta)}</text>`;
+  names+=`<text x="${x+cw/2}" y="216" font-size="10" fill="#5F5E5A" text-anchor="middle">${nm}</text>`;
+  if(k<3){const xr=x+cw,xn=xs[k+1];conn+=`<line x1="${xr}" y1="${y(a1).toFixed(1)}" x2="${xn}" y2="${y(a1).toFixed(1)}" stroke="#C9C7BE" stroke-dasharray="3 3"/>`;}
+ });
+ // connector cx->固定費 already covered (k=2 ->3). 固定費->利益:
+ conn+=`<line x1="${xs[3]+cw}" y1="${y(lv[4]).toFixed(1)}" x2="${xs[4]}" y2="${y(lv[4]).toFixed(1)}" stroke="#C9C7BE" stroke-dasharray="3 3"/>`;
+ const tx=xs[4];bars+=`<rect x="${tx}" y="${y(tot).toFixed(1)}" width="${cw}" height="${Math.max(1,(tot-Math.max(0,minL))*sc).toFixed(1)}" fill="#534AB7"/>`;
+ labs+=`<text x="${tx+cw/2}" y="${(y(tot)-5).toFixed(1)}" font-size="10.5" font-weight="600" fill="#3C3489" text-anchor="middle">${yen(tot)}</text>`;
+ names+=`<text x="${tx+cw/2}" y="216" font-size="10" font-weight="600" fill="#3C3489" text-anchor="middle">SaaS利益</text>`;
+ return `<div class="card"><div style="font-size:13px;font-weight:600">詳細版：SaaS限界利益を 注文・仲介・CX に分解（${MONTHS[d.i]}）</div>
+ <div style="font-size:11px;color:#888780;margin-bottom:6px">各事業の限界利益を積み上げ → 固定費F（SaaS配賦分）を引いてSaaS利益に着地。単位：円</div>
+ <svg viewBox="0 0 560 240" width="100%"><line x1="30" y1="200" x2="545" y2="200" stroke="#E5E3DB"/>
+ ${conn}${bars}${labs}${names}</svg>
+ <div style="font-size:11px;color:#888780;margin-top:4px">注文の限界利益が突出。仲介の投資ドラッグとCXを経て、固定費を引いた残りがSaaS利益。</div></div>`;
+}
+function renderMQ(){
+ const d=mqModel();
+ document.getElementById('mqView').innerHTML='<div class="sec-h">MQ会計（全社・'+MONTHS[d.i]+'・部門別PLスナップショット）</div>'+
+  mqBoxHTML(d)+mqContribHTML(d)+mqProdHTML(d)+mqWaterfallHTML(d);
+}
+
+function bindM(){const p=document.getElementById('unitPanel');p.querySelectorAll('.mbtn').forEach(b=>b.onclick=()=>{metric=b.dataset.m;p.innerHTML=unitPanel(cur);bindM();});}
+function render(){
+  const tabs=document.getElementById('tabs');
+ tabs.innerHTML=UNITS.map((u,k)=>`<button class="tab${cur===k?' active':''}" data-k="${k}">${u.name}</button>`).join('')+`<button class="tab${cur==='progress'?' active':''}" data-k="progress" style="${cur==='progress'?'background:#534AB7;color:#fff;border-color:#534AB7':''}">進捗</button>`+`<button class="tab${cur==='vision'?' active':''}" data-k="vision" style="${cur==='vision'?'background:#534AB7;color:#fff;border-color:#534AB7':''}">目指す姿</button>`+`<button class="tab${cur==='rules'?' active':''}" data-k="rules" style="${cur==='rules'?'background:#9C7B2E;color:#fff;border-color:#9C7B2E':''}">ルール・方針</button>`;
+ tabs.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const k=b.dataset.k;cur=(k==='rules'||k==='vision'||k==='progress')?k:+k;render();});
+ if(cur==='rules'){document.getElementById('unitPanel').innerHTML=rulesPanel();}
+ else if(cur==='vision'){document.getElementById('unitPanel').innerHTML=visionPanel();}
+ else if(cur==='progress'){document.getElementById('unitPanel').innerHTML=progressPanel();}
+ else{document.getElementById('unitPanel').innerHTML=unitPanel(cur);bindM();}
+ document.getElementById('note').innerHTML='売上＝10期計画＆実績シート（クラウド・自動更新）。利益段（売上総利益・直接コスト①②・直接コスト計・貢献利益・間接コスト・部門利益）と配賦人月＝部門別PL（管理会計）2〜5月スナップショット。新しい部門別PLを入れた時点で更新。計画列は売上高のみ。間接費プールは各部門へ配賦している間接費の総額（固定費モニタ）。';
+}
+function load(){
+  document.getElementById('status').style.display='none';
+  document.getElementById('app').style.display='block';
+  render();
+}
+load();
+</script></body></html>

@@ -1,0 +1,224 @@
+/* Ported verbatim from the canonical Apps Script Page.html <style> block. */
+:root {
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #faf9f5;
+  color: #2c2c2a;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  padding: 18px;
+}
+.wrap {
+  max-width: 940px;
+  margin: 0 auto;
+}
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+.subtitle {
+  font-size: 12px;
+  color: #888780;
+  margin-bottom: 16px;
+}
+.sec-h {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5f5e5a;
+  margin: 0 0 10px;
+}
+.card {
+  background: #fff;
+  border: 1px solid #e5e3db;
+  border-radius: 12px;
+  padding: 16px;
+}
+.grid3 {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.grid3 > div {
+  flex: 1;
+  min-width: 220px;
+}
+.kpibig {
+  font-size: 20px;
+  font-weight: 600;
+}
+.muted {
+  color: #888780;
+  font-size: 12px;
+}
+.pill {
+  display: inline-block;
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-weight: 600;
+}
+.jinchip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  background: #eeedfe;
+  color: #3c3489;
+  border: 1px solid #cecbf6;
+  border-radius: 9px;
+  padding: 4px 10px;
+}
+.jinchip b {
+  font-size: 18px;
+  font-weight: 700;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.tab {
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid #d3d1c7;
+  background: #fff;
+  cursor: pointer;
+  color: #2c2c2a;
+}
+.tab.active {
+  background: #534ab7;
+  color: #fff;
+  border-color: #534ab7;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th {
+  color: #888780;
+  font-weight: 600;
+  text-align: right;
+  padding: 5px 6px;
+  border-bottom: 1px solid #e5e3db;
+}
+th.l {
+  text-align: left;
+}
+td {
+  padding: 5px 6px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+td.l {
+  text-align: left;
+}
+tr.cost td {
+  color: #5f5e5a;
+}
+tr.kou td {
+  font-weight: 600;
+  background: #f6f5fe;
+}
+tr.bu td {
+  font-weight: 600;
+  background: #e1f5ee;
+}
+tr.ind td {
+  background: #fbf3ef;
+}
+.delta-up {
+  color: #0f6e56;
+}
+.delta-dn {
+  color: #993c1d;
+}
+.mbtn {
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid #d3d1c7;
+  background: #fff;
+  cursor: pointer;
+  margin-right: 5px;
+}
+.mbtn.active {
+  background: #eeedfe;
+  border-color: #cecbf6;
+  color: #3c3489;
+  font-weight: 600;
+}
+.note {
+  font-size: 11px;
+  color: #888780;
+  margin-top: 12px;
+  line-height: 1.7;
+}
+#status {
+  font-size: 12px;
+  color: #888780;
+  padding: 8px 0;
+}
+.err {
+  background: #faece7;
+  border: 1px solid #f5c4b3;
+  color: #993c1d;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+  font-size: 12px;
+}
+.bar-mon {
+  width: 28px;
+  color: #888780;
+  flex: none;
+}
+.bar-track {
+  flex: 1;
+  background: #f1efe8;
+  border-radius: 4px;
+  height: 15px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 15px;
+  border-radius: 4px;
+}
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 42px;
+  margin-top: 6px;
+}
+.spark > div {
+  flex: 1;
+  background: #f0997b;
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+}
+.brkbox {
+  background: #fafaf7;
+  border: 1px solid #eceae2;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.bar-val {
+  width: 96px;
+  text-align: right;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
