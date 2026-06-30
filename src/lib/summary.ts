@@ -8,7 +8,6 @@ import { salesPlan } from "./sheet";
 import { rowVals } from "./sheet";
 import { snapUnit } from "./snap";
 import { targetSeries } from "./targets";
-import { forecastFromSeries, type Forecast } from "./forecast";
 
 export type Judge = "pass" | "near" | "fail";
 
@@ -31,8 +30,6 @@ export interface SummaryRow {
   judge: Judge;
   /** 前月比（主目標の実績）。null は初月。 */
   mom: number | null;
-  /** 通期着地見込み（現ペース）。 */
-  fc: Forecast;
 }
 
 export interface SummaryKpi {
@@ -90,7 +87,6 @@ export function buildSummaryRows(ctx: Ctx): SummaryRow[] {
       act,
       judge: judgeOf(act, tgt, s.isRate),
       mom: i > 0 ? act - s.act[i - 1] : null,
-      fc: forecastFromSeries(ctx, s),
     };
   });
 }

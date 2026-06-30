@@ -161,10 +161,6 @@ describe("通期着地見込み (forecast B1)", () => {
     const fc = forecastFromSeries(c, s);
     expect(fc.run).toBe((15388744 / 4) * 12);
   });
-  it("経営サマリー各行に通期見込みが入る", () => {
-    const rows = buildSummaryRows(makeCtx({ live, snap }));
-    expect(rows.every((r) => typeof r.fc.run === "number")).toBe(true);
-  });
 });
 
 describe("課題ボード (board)", () => {

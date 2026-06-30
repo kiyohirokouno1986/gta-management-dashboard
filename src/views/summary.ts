@@ -32,17 +32,6 @@ function momHtml(v: number | null): string {
   return "±0";
 }
 
-// 通期見込み（現ペース）。計画比のGAPを下に小さく併記。
-function fcHtml(fc: { run: number; gap: number; rate: number | null; ok: boolean }): string {
-  const col = fc.ok ? "#0F6E56" : "#993C1D";
-  const gapTxt =
-    fc.gap >= 0
-      ? `<span style="color:#0F6E56">計画+${man(fc.gap)}</span>`
-      : `<span style="color:#993C1D">計画▲${man(Math.abs(fc.gap))}</span>`;
-  const rateTxt = fc.rate !== null ? ` ・${fc.rate}%` : "";
-  return `<span style="font-weight:700;color:${col}">${man(fc.run)}</span><br><span style="font-size:10px;color:#888780">${gapTxt}${rateTxt}</span>`;
-}
-
 function kpiCard(lab: string, big: string, bigColor: string, sub: string): string {
   return `<div style="flex:1;min-width:190px;background:#fff;border:1px solid #E5E3DB;border-radius:12px;padding:14px">
    <div style="font-size:12px;color:#888780">${lab}</div>
@@ -97,7 +86,6 @@ export function summaryPanel(ctx: Ctx): string {
      <td style="padding:9px 10px;border-bottom:1px solid #F0EEE7;font-weight:700">${man(r.act)}</td>
      <td style="padding:9px 10px;border-bottom:1px solid #F0EEE7;text-align:center;background:${jc[0]};color:${jc[1]};font-weight:700">${judgeMark[r.judge]}</td>
      <td style="padding:9px 10px;border-bottom:1px solid #F0EEE7">${momHtml(r.mom)}</td>
-     <td style="padding:9px 10px;border-bottom:1px solid #F0EEE7;background:#FBFAFF">${fcHtml(r.fc)}</td>
     </tr>`;
     })
     .join("");
@@ -109,7 +97,7 @@ export function summaryPanel(ctx: Ctx): string {
   <div style="font-size:12px;color:#888780;margin-bottom:14px">${monthLabel}時点・全ユニットの達成状況を俯瞰。色＝緑:達成／黄:あと少し／赤:未達。金額は万円。</div>
   ${kpis}
   <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #E5E3DB;border-radius:12px;overflow:hidden">
-   <thead><tr>${th("ユニット", "", "left")}${th("区分", "", "left")}${th("配賦人月")}${th("売上達成率", "当月")}${th("主目標", "", "left")}${th("目標(万)")}${th("実績(万)")}${th("判定", "", "center")}${th("前月比(万)")}${th("通期見込み(万)", "現ペース・計画比")}</tr></thead>
+   <thead><tr>${th("ユニット", "", "left")}${th("区分", "", "left")}${th("配賦人月")}${th("売上達成率", "当月")}${th("主目標", "", "left")}${th("目標(万)")}${th("実績(万)")}${th("判定", "", "center")}${th("前月比(万)")}</tr></thead>
    <tbody>${body}</tbody></table></div>
-  <div style="font-size:11px;color:#888780;margin-top:8px">※ 主目標＝各ユニットの第一目標（全社=営業利益／不動産仲介=売上達成率／CX=貢献利益／他=部門利益）。投資部門(不動産仲介)は売上・KPIで評価＝赤字許容。<br>※ 通期見込み＝累計実績÷経過月×12（現ペースで通年を走った場合の着地）。計画比＝見込み−通期計画。</div>`;
+  <div style="font-size:11px;color:#888780;margin-top:8px">※ 主目標＝各ユニットの第一目標（全社=営業利益／不動産仲介=売上達成率／CX=貢献利益／他=部門利益）。投資部門(不動産仲介)は売上・KPIで評価＝赤字許容。</div>`;
 }
