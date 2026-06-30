@@ -3,8 +3,14 @@
 import { ML12 } from "../config/units";
 import { yen } from "../lib/format";
 
-/** 計画 vs 実績の折れ線（万円）。zero=true で0ラインを描画。 */
-export function svgChart(plan: number[], act: number[], zero: boolean): string {
+/** 計画 vs 実績の折れ線（万円）。zero=true で0ラインを描画。
+ *  act2＝通期見込み（現ペース）の投影線（破線・オレンジ）。非有限値の点は描かない。 */
+export function svgChart(
+  plan: number[],
+  act: number[],
+  zero: boolean,
+  act2?: number[],
+): string {
   const W = 840,
     H = 196,
     x0 = 58,
@@ -13,8 +19,10 @@ export function svgChart(plan: number[], act: number[], zero: boolean): string {
     y1 = H - 26;
   const P = plan.map((v) => v / 10000),
     A = act.map((v) => v / 10000);
-  let mx = Math.max(0, ...P, ...A),
-    mn = Math.min(0, ...P, ...A);
+  const A2 = act2 ? act2.map((v) => v / 10000) : [];
+  const fin = (a: number[]) => a.filter((v) => Number.isFinite(v));
+  let mx = Math.max(0, ...P, ...A, ...fin(A2)),
+    mn = Math.min(0, ...P, ...A, ...fin(A2));
   const rng = mx - mn || 1;
   mx += rng * 0.08;
   mn -= rng * 0.05;
@@ -52,6 +60,20 @@ export function svgChart(plan: number[], act: number[], zero: boolean): string {
   g += `<polyline points="${P.map(
     (v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1),
   ).join(" ")}" fill="none" stroke="#CECBF6" stroke-width="2.5"/>`;
+  if (A2.length) {
+    const pts = A2.map((v, i) =>
+      Number.isFinite(v) ? X(i).toFixed(1) + "," + Y(v).toFixed(1) : "",
+    )
+      .filter(Boolean)
+      .join(" ");
+    g += `<polyline points="${pts}" fill="none" stroke="#D85A30" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+    A2.forEach((v, i) => {
+      if (Number.isFinite(v))
+        g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(
+          1,
+        )}" r="2.6" fill="#D85A30"/>`;
+    });
+  }
   g += `<polyline points="${A.map(
     (v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1),
   ).join(" ")}" fill="none" stroke="#534AB7" stroke-width="3"/>`;

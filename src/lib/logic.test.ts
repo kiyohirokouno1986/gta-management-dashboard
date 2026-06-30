@@ -6,6 +6,7 @@ import { loadIssues } from "./persist";
 import { num, rowVals, rowVals12, salesPlan, salesPlan12 } from "./sheet";
 import { snapUnit, sumUnits } from "./snap";
 import { targetSeries } from "./targets";
+import { makeForecast, forecastFromSeries } from "./forecast";
 import { yen, mm } from "./format";
 import type { Ctx } from "./types";
 import { UNITS, TARGETS } from "../config/units";
@@ -136,6 +137,33 @@ describe("経営サマリー (summary)", () => {
     expect(get("fudosan").srMonth).toBe(0); // 不動産仲介 当月売上0
     expect(get("fudosan").judge).toBe("fail");
     expect(get("chumon").judge).toBe("near"); // 4,734,544 vs 目標 4,830,400
+  });
+});
+
+describe("通期着地見込み (forecast B1)", () => {
+  it("ランレート＝累計÷経過月×12（計画ピッタリ）", () => {
+    const fc = makeForecast(1200, [100, 100, 100, 100], 4);
+    expect(fc.run).toBe(1200);
+    expect(fc.gap).toBe(0);
+    expect(fc.rate).toBe(100);
+    expect(fc.ok).toBe(true);
+  });
+  it("経過月0は0、annual0以下は黒字キープ型（rate=null）", () => {
+    expect(makeForecast(1000, [], 0).run).toBe(0);
+    const keep = makeForecast(0, [50, 50, 50, 50], 4);
+    expect(keep.rate).toBe(null);
+    expect(keep.ok).toBe(true); // 見込み>0
+    expect(makeForecast(0, [-50, -50, -50, -50], 4).ok).toBe(false);
+  });
+  it("SaaS注文 主目標の見込み＝累計部門利益15,388,744÷4×12", () => {
+    const c = makeCtx({ live, snap });
+    const s = targetSeries(c, unit("chumon"), TARGETS.chumon[0]);
+    const fc = forecastFromSeries(c, s);
+    expect(fc.run).toBe((15388744 / 4) * 12);
+  });
+  it("経営サマリー各行に通期見込みが入る", () => {
+    const rows = buildSummaryRows(makeCtx({ live, snap }));
+    expect(rows.every((r) => typeof r.fc.run === "number")).toBe(true);
   });
 });
 
