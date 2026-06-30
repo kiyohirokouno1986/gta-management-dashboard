@@ -9,6 +9,7 @@ import { targetSeries } from "./targets";
 import { yen, mm } from "./format";
 import type { Ctx } from "./types";
 import { UNITS, TARGETS } from "../config/units";
+import { QUAD_LABEL } from "../config/board";
 
 const ctx: Ctx = { live, snap, LATEST: 3, MODE: "month" } as unknown as Ctx;
 const unit = (k: string) => UNITS.find((u) => u.key === k)!;
@@ -154,6 +155,21 @@ describe("課題ボード (board)", () => {
   it("newCandidates は既存タイトルを除外する", () => {
     expect(newCandidates(c, [])).toEqual(deriveCandidates(c));
     expect(newCandidates(c, loadIssues())).toHaveLength(0); // 埋め込みに同名あり
+  });
+});
+
+describe("フィードバック改善 (#1/#3)", () => {
+  it("#3 SaaS注文の売上内訳が 初期/MRR/BPO の3行に分解されている", () => {
+    const u = UNITS.find((x) => x.key === "chumon")!;
+    expect(u.brk.map((b) => b[0])).toEqual([
+      "初期導入（ALL GRIT）",
+      "MRR（ALL GRIT）",
+      "BPO（らくらく集客）",
+    ]);
+    expect(u.brk.map((b) => b[1])).toEqual(["13", "14", "25"]);
+  });
+  it("#1 課題ボード『なくす』の表示ラベルは『保留・現状維持』（保存値はキー互換）", () => {
+    expect(QUAD_LABEL["なくす"]).toBe("保留・現状維持");
   });
 });
 

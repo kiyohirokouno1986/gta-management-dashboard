@@ -20,6 +20,15 @@ describe("renderPanel smoke test", () => {
     expect(renderPanel(ctx, idx)).toContain("15,388,744");
   });
 
+  it("#3 SaaS注文の売上内訳(初期/MRR/BPO)と #2 マトリクスの実数併記が出る", () => {
+    const idx = UNITS.findIndex((u) => u.key === "chumon");
+    const html = renderPanel(ctx, idx);
+    expect(html).toContain("初期導入（ALL GRIT）");
+    expect(html).toContain("MRR（ALL GRIT）");
+    expect(html).toContain("BPO（らくらく集客）");
+    expect(html).toContain("各セル＝実績金額"); // #2 実数併記の凡例
+  });
+
   it("renders the static panels", () => {
     expect(renderPanel(ctx, "progress")).toContain("進捗（計画 対 実績）");
     expect(renderPanel(ctx, "vision")).toContain("経営と現場の一体化");

@@ -190,7 +190,7 @@ export function IssuesBoard({ ctx }: { ctx: Ctx }) {
                   alignItems: "center",
                 }}
               >
-                <span>{q.key}</span>
+                <span>{q.label}</span>
                 <span style={{ opacity: 0.85, fontWeight: 400, fontSize: 12, marginLeft: 6 }}>
                   {q.sub}
                 </span>
@@ -289,8 +289,13 @@ export function IssuesBoard({ ctx }: { ctx: Ctx }) {
                     setEditing({ ...editing, draft: { ...editing.draft, quad: e.target.value as Quadrant } })
                   }
                 >
-                  {[...QUADS.map((q) => q.key), "完了"].map((q) => (
-                    <option key={q}>{q}</option>
+                  {[
+                    ...QUADS.map((q) => ({ value: q.key, label: q.label })),
+                    { value: "完了", label: "完了" },
+                  ].map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
                   ))}
                 </select>,
               )}
