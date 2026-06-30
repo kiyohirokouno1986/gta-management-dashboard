@@ -97,7 +97,8 @@ export const UNITS: Unit[] = [
     desc: "当期の部門利益（黒字）で評価する",
     plan: "12+25",
     brk: [
-      ["注文住宅（ALL GRIT：初期＋MRR）", "12"],
+      ["初期導入（ALL GRIT）", "13"],
+      ["MRR（ALL GRIT）", "14"],
       ["BPO（らくらく集客）", "25"],
     ],
   },

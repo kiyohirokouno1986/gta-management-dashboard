@@ -30,29 +30,28 @@ function matRow(ctx: Ctx, num: string, s: TargetSeries): string {
   const i = ctx.LATEST;
   let cells = "";
   for (let k = 0; k <= i; k++) {
+    const act = s.act[k],
+      tgtv = s.tgt12[k];
+    const rate = tgtv > 0 ? Math.round((act / tgtv) * 100) : null;
+    let kind: CellKind;
     if (s.isRate) {
-      const r = s.tgt12[k] > 0 ? Math.round((s.act[k] / s.tgt12[k]) * 100) : null;
-      const pass = r !== null && r >= 100,
-        near = r !== null && r >= 90;
-      cells += matCell(
-        r !== null ? r + "%" : "—",
-        pass ? "pass" : near ? "near" : "fail",
-        k === i,
-        false,
-      );
+      kind = rate !== null && rate >= 100 ? "pass" : rate !== null && rate >= 90 ? "near" : "fail";
     } else {
-      const pass = s.act[k] >= s.tgt12[k];
-      const near =
-        s.act[k] >= s.tgt12[k] - Math.max(Math.abs(s.tgt12[k]) * 0.1, 200000);
-      cells += matCell(
-        yen(s.act[k]),
-        pass ? "pass" : near ? "near" : "fail",
-        k === i,
-        false,
-      );
+      const pass = act >= tgtv;
+      const near = act >= tgtv - Math.max(Math.abs(tgtv) * 0.1, 200000);
+      kind = pass ? "pass" : near ? "near" : "fail";
     }
+    // 実数（金額）＋達成率% を併記（%だけだと分かりにくい、の改善）
+    const pct = rate !== null ? `<br><span style="font-size:9px;opacity:.75">${rate}%</span>` : "";
+    cells += matCell(`${yen(act)}${pct}`, kind, k === i, false);
   }
-  for (let k = i + 1; k < 12; k++) cells += matCell(yen(s.tgt12[k]), "future", false, false);
+  for (let k = i + 1; k < 12; k++)
+    cells += matCell(
+      `<span style="font-size:9px;opacity:.7">目標</span><br>${yen(s.tgt12[k])}`,
+      "future",
+      false,
+      false,
+    );
   const total = s.tgt12.reduce((a, b) => a + b, 0);
   return `<tr><td style="text-align:left;padding:5px 8px;white-space:nowrap;position:sticky;left:0;background:#fff;font-weight:600">${num} ${s.label}<br><span style="font-size:10px;color:#888780;font-weight:400">${s.sub}</span></td>${cells}<td style="padding:5px 8px;text-align:right;font-weight:600;background:#F6F5FE">${yen(
     total,
@@ -86,5 +85,5 @@ export function buildMatrix(ctx: Ctx, u: Unit): string {
   return `<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;font-size:11.5px;min-width:980px;width:100%">
   <thead><tr><th style="text-align:left;padding:5px 8px;position:sticky;left:0;background:#fff;color:#888780">目標／月</th>${hd}<th style="padding:5px 8px;color:#888780">通期</th></tr></thead>
   <tbody>${rows}</tbody></table></div>
-  <div style="font-size:10px;color:#888780;margin-top:5px">緑=達成／黄=あと少し／赤=未達。紫=この先の目標。枠=今月。単位 円・%。売上=10期計画ライブ、利益=計画売上×目標率で逆算（全社は10期営業利益ライン）。</div>`;
+  <div style="font-size:10px;color:#888780;margin-top:5px">各セル＝実績金額（下に達成率%）。緑=達成／黄=あと少し／赤=未達。紫=この先の目標（金額）。枠=今月。単位 円。売上=10期計画ライブ、利益=計画売上×目標率で逆算（全社は10期営業利益ライン）。</div>`;
 }
