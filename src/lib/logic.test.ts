@@ -171,6 +171,14 @@ describe("フィードバック改善 (#1/#3)", () => {
   it("#1 課題ボード『なくす』の表示ラベルは『保留・現状維持』（保存値はキー互換）", () => {
     expect(QUAD_LABEL["なくす"]).toBe("保留・現状維持");
   });
+  it("B4 CXの内訳がチーム呼称（オンリーワンセールス/CX在庫）に分解されている", () => {
+    const u = UNITS.find((x) => x.key === "cx")!;
+    expect(u.brk.map((b) => b[0])).toEqual([
+      "オンリーワンセールス（コンサル・動画）",
+      "CX在庫（コール代行）",
+    ]);
+    expect(u.brk.map((b) => b[1])).toEqual(["35", "31"]);
+  });
 });
 
 describe("dynamic month count (sheet may add months)", () => {

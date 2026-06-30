@@ -58,7 +58,7 @@ export function advicePieces(ctx: Ctx, u: Unit): string[] {
     );
     const cxc = agg(ctx, rowExpr(ctx.live.act, "35"));
     out.push(
-      `粗利率の高いコンサル・動画（当月 ${yen(
+      `粗利率の高いオンリーワンセールス（コンサル・動画、当月 ${yen(
         cxc,
       )}）の受注を増やし、貢献利益の月次目標まで引き上げるのが鍵。`,
     );
